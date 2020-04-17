@@ -30,8 +30,8 @@
 	 * \license   https://opensource.org/licenses/MIT     MIT License
 	 */
 	
-	require_once 'Crypt.php';
-	require_once 'Exception.php';
+	require_once __DIR__.'/Crypt.php';
+	require_once __DIR__.'/Exception.php';
 	
 	/**
 	* This class allows to access to a cache in order to store/retrieve data.

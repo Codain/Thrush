@@ -30,8 +30,8 @@
 	 * \license   https://opensource.org/licenses/MIT     MIT License
 	 */
 	
-	require_once 'Cache.php';
-	require_once 'Exception.php';
+	require_once __DIR__.'/Cache.php';
+	require_once __DIR__.'/Exception.php';
 	
 	class Thrush_Template
 	{
