@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * NExt Framework
+	 * Thrush Framework
 	 *
 	 * MIT License
 	 *
