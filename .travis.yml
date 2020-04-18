@@ -1,3 +1,7 @@
+# From: https://docs.travis-ci.com/user/languages/php/
+# "PHP 5.6(.x) - 7.0(.x) support is available on Precise, Trusty and Xenial only"
+dist: trusty
+
 # see http://about.travis-ci.org/docs/user/languages/php/ for more hints
 language: php
 
