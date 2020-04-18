@@ -80,7 +80,7 @@
 		* Execute a Nominatim Lookup command (see https://nominatim.org/release-docs/develop/api/Lookup/).
 		*
 		* \param array $keys
-		*   Array of objects to look for (a node is Nxxx, a Way is Wxxx and a 
+		*   Array of OSM objects to look for (a node is Nxxx, a Way is Wxxx and a 
 		*   relation is Rxxx)
 		* \param array $acceptLanguages
 		*   List of languages to consider for the result (optional, default null). Either 
