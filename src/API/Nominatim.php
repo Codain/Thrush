@@ -101,7 +101,7 @@
 			}
 			
 			// Fetch data
-			$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?email='.$this->email.'&format=json&osm_ids='.implode(',', $keys ).(!is_null($languages)?'&accept-language='.implode(',', $languages):''), Thrush_Cache::LIFE_IMMORTAL);
+			$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?email='.$this->email.'&format=json&osm_ids='.implode(',', $keys ).(!is_null($languages)?'&accept-language='.implode(',', $languages):''), null, Thrush_Cache::LIFE_IMMORTAL);
 			
 			return json_decode($data, true);
 		}
@@ -133,7 +133,7 @@
 			}
 			
 			// Fetch data
-			$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?email='.$this->email.'&format=json&lat='.$lat.'&lon='.$lon.(!is_null($languages)?'&accept-language='.implode(',', $languages):''), Thrush_Cache::LIFE_IMMORTAL);
+			$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?email='.$this->email.'&format=json&lat='.$lat.'&lon='.$lon.(!is_null($languages)?'&accept-language='.implode(',', $languages):''), null, Thrush_Cache::LIFE_IMMORTAL);
 			
 			return json_decode($data, true);
 		}

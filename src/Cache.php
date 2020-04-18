@@ -491,6 +491,8 @@
 		*   Name of the cache to use
 		* \param string $url
 		*   URL of the data to load
+		* \param string $key
+		*   Key associated to the data (null to generate one from URL)
 		* \param int $life
 		*   Cache life in seconds
 		* \param string $pwd
@@ -502,9 +504,12 @@
 		* \see exists()
 		* \see load()
 		*/
-		public function loadURLFromWebOrCache(string $type, string $url, $life=self::LIFE_IMMORTAL, string $pwd='')
+		public function loadURLFromWebOrCache(string $type, string $url, string $key=null, $life=self::LIFE_IMMORTAL, string $pwd='')
 		{
-			$key = md5($url);
+			if(is_null($key))
+			{
+				$key = md5($url);
+			}
 			
 			if(!$this->isEnabled($type) || !$this->exists($type, $key, $life))
 			{
