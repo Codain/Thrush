@@ -8,7 +8,7 @@
 
 	final class Thrush_NominatimTest extends TestCase
 	{
-		public function testCanBeCreatedFromValidEmailAddress(): void
+		public function testCanBeCreatedFromValidEmailAddress()
 		{
 			$cache = new Thrush_Cache('localhost', 'localhost', './cache/');
 			
@@ -18,7 +18,7 @@
 			);
 		}
 		
-		public function testCannotBeCreatedFromInvalidEmailAddress(): void
+		public function testCannotBeCreatedFromInvalidEmailAddress()
 		{
 			$cache = new Thrush_Cache('localhost', 'localhost', './cache/');
 			
