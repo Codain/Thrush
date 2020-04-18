@@ -82,7 +82,7 @@
 		* \param array $keys
 		*   Array of objects to look for (a node is Nxxx, a Way is Wxxx and a 
 		*   relation is Rxxx)
-		* \param array $languages
+		* \param array $acceptLanguages
 		*   List of languages to consider for the result (optional, default null). Either 
 		*   use a standard RFC2616 accept-language string or a simple comma-
 		*   separated list of language codes.
@@ -90,18 +90,32 @@
 		* \return array
 		*   JSON array of the result (see https://nominatim.org/release-docs/develop/api/Lookup/)
 		*/
-		public function queryByObject(array $keys, array $languages=null)
+		public function queryByObject(array $keys, array $acceptLanguages=null)
 		{
 			$endpointUrl = 'https://nominatim.openstreetmap.org/lookup';
 			
 			// If languages are specified, we filter to remove empty values
-			if(is_array($languages))
+			if(is_array($acceptLanguages))
 			{
-				$languages = array_filter($languages);
+				$acceptLanguages = array_filter($acceptLanguages);
 			}
 			
+			// Generate URL-encoded query string
+			$attributes = array(
+				'email' => $this->email,
+				'format' => 'json',
+				'osm_ids' => implode(',', $keys )
+				);
+				
+			if(!is_null($acceptLanguages))
+			{
+				$attributes['accept-language'] = implode(',', $acceptLanguages);
+			}
+			
+			$queryString = http_build_query($attributes);
+			
 			// Fetch data
-			$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?email='.$this->email.'&format=json&osm_ids='.implode(',', $keys ).(!is_null($languages)?'&accept-language='.implode(',', $languages):''), null, Thrush_Cache::LIFE_IMMORTAL);
+			$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?'.$queryString, null, Thrush_Cache::LIFE_IMMORTAL);
 			
 			return json_decode($data, true);
 		}
@@ -114,7 +128,7 @@
 		*   Longitude of the coordinate
 		* \param float $lat
 		*   Latitude of the coordinate
-		* \param array $languages
+		* \param array $acceptLanguages
 		*   List of languages to consider for the result (optional, default null). Either 
 		*   use a standard RFC2616 accept-language string or a simple comma-
 		*   separated list of language codes.
@@ -122,18 +136,33 @@
 		* \return array
 		*   JSON array of the result (see https://nominatim.org/release-docs/develop/api/Reverse/)
 		*/
-		public function queryByCoordinate(float $lon, float $lat, array $languages=null)
+		public function queryByCoordinate(float $lon, float $lat, array $acceptLanguages=null)
 		{
 			$endpointUrl = 'https://nominatim.openstreetmap.org/reverse';
 			
 			// If languages are specified, we filter to remove empty values
-			if(is_array($languages))
+			if(is_array($acceptLanguages))
 			{
-				$languages = array_filter($languages);
+				$acceptLanguages = array_filter($acceptLanguages);
 			}
 			
+			// Generate URL-encoded query string
+			$attributes = array(
+				'email' => $this->email,
+				'format' => 'json',
+				'lat' => $lat,
+				'lon' => $lon
+				);
+				
+			if(!is_null($acceptLanguages))
+			{
+				$attributes['accept-language'] = implode(',', $acceptLanguages);
+			}
+			
+			$queryString = http_build_query($attributes);
+			
 			// Fetch data
-			$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?email='.$this->email.'&format=json&lat='.$lat.'&lon='.$lon.(!is_null($languages)?'&accept-language='.implode(',', $languages):''), null, Thrush_Cache::LIFE_IMMORTAL);
+			$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?'.$queryString, null, Thrush_Cache::LIFE_IMMORTAL);
 			
 			return json_decode($data, true);
 		}
