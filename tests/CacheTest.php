@@ -51,7 +51,7 @@
 			// At this point no dat shall exists
 			$this->assertEquals(
 				false,
-				$cache->exists($type, $key, self::LIFE_IMMORTAL)
+				$cache->exists($type, $key, Thrush_Cache::LIFE_IMMORTAL)
 			);
 			
 			// Add data to the cache
@@ -63,7 +63,7 @@
 			// At this point data shall exists
 			$this->assertEquals(
 				true,
-				$cache->exists($type, $key, self::LIFE_IMMORTAL)
+				$cache->exists($type, $key, Thrush_Cache::LIFE_IMMORTAL)
 			);
 			
 			// Check back data
@@ -81,7 +81,7 @@
 			// At this point data shall not exists anymore
 			$this->assertEquals(
 				false,
-				$cache->exists($type, $key, self::LIFE_IMMORTAL)
+				$cache->exists($type, $key, Thrush_Cache::LIFE_IMMORTAL)
 			);
 		}
 		
