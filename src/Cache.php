@@ -191,6 +191,11 @@
 			$this->ignoreListAll = false;
 			$this->ignoreList = array();
 			
+			if(!file_exists($root) || !is_dir($root))
+			{
+				throw new Thrush_Exception('Error', 'Directory "'.$root.'" does not exist or is not a directory');
+			}
+			
 			$this->root = $root;
 			$this->websiteName = $websiteName;
 			$this->websiteURL = $websiteURL;
