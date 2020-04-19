@@ -19,22 +19,22 @@
 		{
 			$cache = new Thrush_Cache('localhost', 'localhost', './cache/');
 			
-			$cache->enable('type');
+			$cache->enable('CacheTest');
 			$this->assertEquals(
 				true,
-				$cache->isEnabled('type')
+				$cache->isEnabled('CacheTest')
 			);
 			
-			$cache->disable('type');
+			$cache->disable('CacheTest');
 			$this->assertEquals(
 				false,
-				$cache->isEnabled('type')
+				$cache->isEnabled('CacheTest')
 			);
 			
-			$cache->enable('type');
+			$cache->enable('CacheTest');
 			$this->assertEquals(
 				true,
-				$cache->isEnabled('type')
+				$cache->isEnabled('CacheTest')
 			);
 		}
 		
@@ -87,7 +87,7 @@
 		
 		public function testExistsLoadSaveNoPassword()
 		{
-			$type = 'type';
+			$type = 'CacheTest';
 			$data = 'Some dummy data';
 			$key = 'key';
 			$pwd = ''; // No password
@@ -97,7 +97,7 @@
 		
 		public function testExistsLoadSaveWithPassword()
 		{
-			$type = 'type';
+			$type = 'CacheTest';
 			$data = 'Some dummy data';
 			$key = 'key';
 			$pwd = 'uuQy\4\CBQhRem\'H';
