@@ -10,6 +10,9 @@ php:
   # aliased to a recent 7.x version
   - 7.0
 
+before_script:
+  - ./tests/before_script.sh
+  
 # optionally specify a list of environments, for example to test different RDBMS
 #env:
 #  - DB=mysql
