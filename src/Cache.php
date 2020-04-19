@@ -98,6 +98,11 @@
 		protected $typeEnabled = array();
 		
 		/**
+		* bool Default value if a cache is neither enabled nor disabled.
+		*/
+		protected $defaultEnabled = false;
+		
+		/**
 		* Allow to enable a cache type.
 		*
 		* \param string $type
@@ -137,8 +142,6 @@
 		
 		/**
 		* Get if a cache type is enabled or not.
-		*
-		* \todo Remove dependency to fonctions.php
 		* 
 		* \param string $type
 		*   Name of the cache to use
@@ -148,13 +151,29 @@
 		*
 		* \see enable()
 		* \see disable()
+		* \see setDefaultEnabled()
 		*/
 		public function isEnabled(string $type)
 		{
 			if(!array_key_exists($type, $this->typeEnabled))
-				return false;
+			{
+				return $this->defaultEnabled;
+			}
 			
 			return $this->typeEnabled[$type];
+		}
+		
+		/**
+		* Get if a cache type is enabled or not.
+		* 
+		* \param bool $defaultEnabled
+		*   Default value if a cache is neither enabled nor disabled
+		* 
+		* \see isEnabled()
+		*/
+		public function setDefaultEnabled(bool $defaultEnabled)
+		{
+			$this->defaultEnabled = $defaultEnabled;
 		}
 		
 		/**
