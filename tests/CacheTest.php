@@ -100,7 +100,7 @@
 			$type = 'CacheTest';
 			$data = 'Some dummy data';
 			$key = 'key';
-			$pwd = 'uuQy\4\CBQhRem\'H';
+			$pwd = 'uuQy4CBQhRem\'H';
 			
 			$this->incExistsLoadSaveRemove($type, $key, $data, $pwd);
 		}
