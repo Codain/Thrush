@@ -126,7 +126,7 @@ class Thrush_CryptRC4
 	*/
 	protected function initEncryption()
 	{
-		if(is_null($key))
+		if(is_null($this->key))
 		{
 			throw new Thrush_Exception('Error', 'Encryption key shall not be null');
 		}
