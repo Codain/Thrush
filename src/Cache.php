@@ -487,11 +487,13 @@
 					
 					Thrush_Crypt::decrypt($data, $pwd);
 					
-					if(substr($data, 0, 16) !== $this->pwdCheck)
+					if(mb_substr($data, 0, 16) !== $this->pwdCheck)
 					{
 						$data = '';
 						throw new Thrush_Exception('Error', 'Password incorrect');
 					}
+					
+					$data = mb_substr($data, 16);
 				}
 				else
 				{
