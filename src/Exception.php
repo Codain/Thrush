@@ -187,7 +187,7 @@
 		{
 			parent::__construct('Error', '', 0);
 			
-			$this->response = $response;
+			$this->response = $http_headers;
 			
 			$this->privateMessage = "Error ".$this->getHTTPCode().": ".$this->response[0]."\n".$url;
 		}
