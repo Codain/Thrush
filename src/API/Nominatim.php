@@ -44,7 +44,7 @@
 		protected $cache = null;
 		
 		/**
-		* Thrush_Cache Pointer to a Thrush_Cache object
+		* string Email address to reach website owner in case Nominatim needs to do it
 		*/
 		protected $email = '';
 		
