@@ -17,12 +17,5 @@
 				new Thrush_Wikipedia($cache)
 			);
 		}
-		
-		public function testInvalidCache()
-		{
-			$this->expectException(Thrush_Exception::class);
-
-			new Thrush_Wikipedia(null);
-		}
 	}
 ?>
