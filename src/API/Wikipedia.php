@@ -94,9 +94,16 @@
 			$queryString = http_build_query($attributes);
 			
 			// Fetch data
-			$data = $this->cache->loadURLFromWebOrCache('wikipedia', $endpointUrl.'?'.$queryString, null, Thrush_Cache::LIFE_IMMORTAL);
-			
-			return json_decode($data, true);
+			try
+			{
+				$data = $this->cache->loadURLFromWebOrCache('wikipedia', $endpointUrl.'?'.$queryString, null, Thrush_Cache::LIFE_IMMORTAL);
+				
+				return json_decode($data, true);
+			}
+			catch(Thrush_Cache_NoDataToLoadException $e)
+			{
+				return null;
+			}
 		}
 	}
 ?>

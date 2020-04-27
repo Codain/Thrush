@@ -87,8 +87,8 @@
 		*   use a standard RFC2616 accept-language string or a simple comma-
 		*   separated list of language codes.
 		*
-		* \return array
-		*   JSON array of the result (see https://nominatim.org/release-docs/develop/api/Lookup/)
+		* \return array|null
+		*   JSON array of the result (see https://nominatim.org/release-docs/develop/api/Lookup/) or null
 		*/
 		public function queryByObject(array $keys, array $acceptLanguages=null)
 		{
@@ -114,10 +114,17 @@
 			
 			$queryString = http_build_query($attributes);
 			
-			// Fetch data
-			$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?'.$queryString, null, Thrush_Cache::LIFE_IMMORTAL);
-			
-			return json_decode($data, true);
+			try
+			{
+				// Fetch data
+				$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?'.$queryString, null, Thrush_Cache::LIFE_IMMORTAL);
+				
+				return json_decode($data, true);
+			}
+			catch(Thrush_Cache_NoDataToLoadException $e)
+			{
+				return null;
+			}
 		}
 		
 		/**
@@ -133,8 +140,8 @@
 		*   use a standard RFC2616 accept-language string or a simple comma-
 		*   separated list of language codes.
 		*
-		* \return array
-		*   JSON array of the result (see https://nominatim.org/release-docs/develop/api/Reverse/)
+		* \return array|null
+		*   JSON array of the result (see https://nominatim.org/release-docs/develop/api/Reverse/) or null
 		*/
 		public function queryByCoordinate(float $lon, float $lat, array $acceptLanguages=null)
 		{
@@ -161,10 +168,17 @@
 			
 			$queryString = http_build_query($attributes);
 			
-			// Fetch data
-			$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?'.$queryString, null, Thrush_Cache::LIFE_IMMORTAL);
+			try
+			{
+				// Fetch data
+				$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?'.$queryString, null, Thrush_Cache::LIFE_IMMORTAL);
 			
-			return json_decode($data, true);
+				return json_decode($data, true);
+			}
+			catch(Thrush_Cache_NoDataToLoadException $e)
+			{
+				return null;
+			}
 		}
 	}
 ?>

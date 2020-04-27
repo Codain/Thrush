@@ -36,6 +36,12 @@
 	/**
 	* This class allows to access to a cache in order to store/retrieve data.
 	* Cache is implemented as a system file.
+	*
+	* Regarding external URL call, each type of cache can be configured with a defined mode:
+	*  - DefaultMode: If the requested data are already stored and are not outdated, it will be readback. Otherwise an external call will be made.
+	*  - CacheOnlyMode: If the requested data are already stored no matter wether it is outdated, it will be readback. Otherwise an Exception will be thrown.
+	*  - DefaultWithLimitsMode: Same as default mode but with a counter (semaphore) before switching to CacheOnlyMode.
+	*  - AlwaysRefreshMode: Always issue external call and save in cache.
 	*/
 	class Thrush_Cache
 	{
@@ -45,20 +51,15 @@
 		const LIFE_BIWEEK = 1296000;
 		const LIFE_MONTH = 2635200;
 		
+		const DefaultMode = 0;
+		const CacheOnlyMode = 1;
+		const DefaultWithLimitsMode = 2;
+		const AlwaysRefreshMode = 3;
+		
 		/**
 		* string Path to cache directory from website root.
 		*/
 		protected $root = './cache/';
-		
-		/**
-		* Array List of cache types to ignore.
-		*/
-		protected $ignoreList = array();
-		
-		/**
-		* Bool Whether or not to ignore all cache types.
-		*/
-		protected $ignoreListAll = false;
 		
 		/**
 		* string Website name (used for user-agent HTTP attribute).
@@ -95,12 +96,131 @@
 		*/
 		protected $pwdCheck = '!7+t6]3FVf7;xK#X';
 		
-		protected $typeEnabled = array();
+		/**
+		* array Set of modes and semaphore for each type.
+		*/
+		protected $typeModes = array();
+		
+		/**
+		* int Default mode.
+		*/
+		protected $defaultMode = self::DefaultMode;
+		
+		/**
+		* int Default number of tokens when in DefaultWithLimitsMode.
+		*/
+		protected $defaultSemaphore = 10;
 		
 		/**
 		* bool Default value if a cache is neither enabled nor disabled.
 		*/
 		protected $defaultEnabled = false;
+		
+		protected function initMode(string $type)
+		{
+			$this->typeModes[$type] = array($this->defaultMode, $this->defaultSemaphore, 0, $this->defaultEnabled);
+		}
+		
+		/**
+		* Set mode for a given type of cache.
+		*
+		* \param int $mode
+		*   Mode to assign
+		* \param int $semaphore
+		*   Number of tokens when in DefaultWithLimitsMode (optional, -1 to use default value or keep existing value)
+		* \param string $type
+		*   Name of the cache to use (optional)
+		*
+		* \see getMode
+		*/
+		public function setMode(int $mode, int $semaphore=-1, string $type='')
+		{
+			if($type === '')
+			{
+				foreach($this->typeModes as $k => &$v)
+				{
+					$v[0] = $mode;
+					
+					if($semaphore >= 0)
+						$v[1] = $semaphore;
+				}
+				
+				$this->defaultMode = $mode;
+			}
+			else
+			{
+				if(!array_key_exists($type, $this->typeModes))
+				{
+					$this->initMode($type);
+				}
+				
+				$this->typeModes[$type][0] = $mode;
+				$this->typeModes[$type][1] = ($semaphore>=0?$semaphore:$this->defaultSemaphore);
+			}
+		}
+		
+		/**
+		* Get mode for a given type of cache.
+		*
+		* \param string $type
+		*   Name of the cache to use
+		*
+		* \return int
+		*
+		* \see setMode
+		*/
+		protected function getMode(string $type)
+		{
+			if(!array_key_exists($type, $this->typeModes))
+			{
+				$this->initMode($type);
+			}
+			
+			return $this->typeModes[$type][0];
+		}
+		
+		/**
+		* Consume a token if available and returns \c true, otherwise returns \c false.
+		*
+		* \param string $type
+		*   Name of the cache to use
+		*
+		* \return bool
+		*/
+		protected function getSemaphore(string $type)
+		{
+			if(!array_key_exists($type, $this->typeModes))
+			{
+				$this->initMode($type);
+			}
+			
+			$this->typeModes[$type][1]--;
+			
+			return ($this->typeModes[$type][1]>=0);
+		}
+		
+		/**
+		* Retrieve data on Cache usage.
+		*
+		* \return array
+		*/
+		public function getStatistics()
+		{
+			$ret = array();
+			
+			foreach($this->typeModes as $key => $values)
+			{
+				$ret[] = array(
+					'type' => $key,
+					'mode' => $values[0],
+					'tokensLeft' => max($values[1], 0),
+					'tokensMissing' => ($values[0]===self::DefaultWithLimitsMode?max(-$values[1], 0):'0'),
+					'calls' => $values[2]
+				);
+			}
+			
+			return $ret;
+		}
 		
 		/**
 		* Allow to enable a cache type.
@@ -116,7 +236,12 @@
 		*/
 		public function enable(string $type)
 		{
-			$this->typeEnabled[$type] = true;
+			if(!array_key_exists($type, $this->typeModes))
+			{
+				$this->initMode($type);
+			}
+			
+			$this->typeModes[$type][3] = true;
 			
 			return true;
 		}
@@ -135,7 +260,12 @@
 		*/
 		public function disable(string $type)
 		{
-			$this->typeEnabled[$type] = false;
+			if(!array_key_exists($type, $this->typeModes))
+			{
+				$this->initMode($type);
+			}
+			
+			$this->typeModes[$type][3] = false;
 			
 			return true;
 		}
@@ -155,12 +285,12 @@
 		*/
 		public function isEnabled(string $type)
 		{
-			if(!array_key_exists($type, $this->typeEnabled))
+			if(!array_key_exists($type, $this->typeModes))
 			{
-				return $this->defaultEnabled;
+				$this->initMode($type);
 			}
 			
-			return $this->typeEnabled[$type];
+			return $this->typeModes[$type][3];
 		}
 		
 		/**
@@ -188,9 +318,6 @@
 		*/
 		function __construct(string $websiteName, string $websiteURL, string $root='./cache/')
 		{
-			$this->ignoreListAll = false;
-			$this->ignoreList = array();
-			
 			if(!file_exists($root) || !is_dir($root))
 			{
 				throw new Thrush_Exception('Error', 'Directory "'.$root.'" does not exist or is not a directory');
@@ -279,19 +406,18 @@
 		*/
 		public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL)
 		{
-			// If it is required to ignore the whole cache or to ignore the given cache
-			// We return \c false to make sure data will not be loaded. 
-			if($this->ignoreListAll === true || in_array($type, $this->ignoreList))
-				return false;
-			
 			// If data exists in the cache
 			if(file_exists($this->getFullPath($type, $key)))
 			{
 				// Return whether it is still valid or not
 				if($life <= 0)
+				{
 					return true;
+				}
 				else
+				{
 					return ((time()-$this->getCreationTime($type, $key)) < $life);
+				}
 			}
 			
 			return false;
@@ -383,70 +509,6 @@
 		}
 		
 		/**
-		* Consider all caches by its name.
-		*
-		* \see ignoreAll()
-		*/
-		public function considerAll()
-		{
-			$this->ignoreListAll = false;
-		}
-		
-		/**
-		* Consider a cache by its name.
-		* 
-		* \param string $type
-		*   Name of the cache to ignore
-		*
-		* \see ignoreType()
-		*/
-		public function considerType(string $type)
-		{
-			if(is_array($this->ignoreList))
-			{
-				foreach (array_keys($this->ignoreList, $type, true) as $key)
-				{
-					unset($this->ignoreList[$key]);
-				}
-			}
-		}
-		
-		/**
-		* Ignore a cache by its name.
-		* 
-		* \param string|Array $type
-		*   Name of the cache to ignore or set of names
-		*
-		* \see considerType()
-		*/
-		public function ignoreType(string $type)
-		{
-			if(is_array($this->ignoreList) && !in_array($type, $this->ignoreList))
-			{
-				if(is_array($type))
-				{
-					$this->ignoreList = array_merge($this->ignoreList, $type);
-				}
-				else
-				{
-					$this->ignoreList[] = $type;
-				}
-				
-				$this->ignoreList = array_unique($this->ignoreList, SORT_STRING);
-			}
-		}
-		
-		/**
-		* Ignore all caches.
-		*
-		* \see considerAll()
-		*/
-		public function ignoreAll()
-		{
-			$this->ignoreListAll = true;
-		}
-		
-		/**
 		* Retrieve data from cache.
 		* 
 		* \param string $type
@@ -456,7 +518,7 @@
 		* \param string $pwd
 		*   Password to encrypt data, if required
 		* 
-		* \return mixed
+		* \return string
 		*   Data loaded
 		*
 		* \see chargerUrl()
@@ -465,44 +527,56 @@
 		* \see remove()
 		*
 		* \throws Thrush_Exception If password provided is incorrect or if data are encrypted and no password is provided
+		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
 		*/
 		public function load(string $type, string $key, string $pwd='')
 		{
-			$data = file_get_contents($this->getFullPath($type, $key));
-			
 			// Reset last date
 			$this->lastDate = null;
 			$this->lastDateType = $type;
 			$this->lastDateKey = $key;
 			
-			// Extract mode and data
-			$mode = mb_substr($data, 0, 5);
+			$data = '';
+			$fullpath = $this->getFullPath($type, $key);
 			
-			// If data is encrypted, decrypt them
-			if($mode === 'CRYPT')
+			// Load from file only if exists
+			if(file_exists($fullpath))
 			{
-				if($pwd !== '')
+				$data = file_get_contents($fullpath);
+				
+				// Extract mode and data
+				$mode = mb_substr($data, 0, 5);
+				
+				// If data is encrypted, decrypt them
+				if($mode === 'CRYPT')
+				{
+					if($pwd !== '')
+					{
+						$data = mb_substr($data, 5);
+						
+						Thrush_Crypt::decrypt($data, $pwd);
+						
+						if(mb_substr($data, 0, 16) !== $this->pwdCheck)
+						{
+							$data = '';
+							throw new Thrush_Exception('Error', 'Password incorrect');
+						}
+						
+						$data = mb_substr($data, 16);
+					}
+					else
+					{
+						throw new Thrush_Exception('Error', 'Data requested is crypted');
+					}
+				}
+				else if($mode === 'CLEAR')
 				{
 					$data = mb_substr($data, 5);
-					
-					Thrush_Crypt::decrypt($data, $pwd);
-					
-					if(mb_substr($data, 0, 16) !== $this->pwdCheck)
-					{
-						$data = '';
-						throw new Thrush_Exception('Error', 'Password incorrect');
-					}
-					
-					$data = mb_substr($data, 16);
-				}
-				else
-				{
-					throw new Thrush_Exception('Error', 'Data requested is crypted');
 				}
 			}
-			else if($mode === 'CLEAR')
+			else
 			{
-				$data = mb_substr($data, 5);
+				throw new Thrush_Cache_NoDataToLoadException();
 			}
 			
 			return $data;
@@ -537,16 +611,70 @@
 				$key = md5($url);
 			}
 			
-			if(!$this->isEnabled($type) || !$this->exists($type, $key, $life))
+			//echo '<span style="color: red;">CACHE: Loading type '.$type.' with URL '.$url.' (key '.$key.') and life '.$life.'</span><br />';
+			
+			// Determine wether we willl need to launch query or to return cache
+			$launchQuery = false;
+			$mode = $this->getMode($type);
+			
+			$loop = true;
+			while($loop)
 			{
-				//echo '<span style="color: red;">CACHE: Loading type '.$type.' with URL '.$url.'</span><br />';
+				$loop = false;
+				switch($mode)
+				{
+					case self::AlwaysRefreshMode:
+						$launchQuery = true;
+						break;
+					case self::DefaultWithLimitsMode:
+						if($this->exists($type, $key, $life))
+						{
+							$mode = self::CacheOnlyMode;
+						}
+						else
+						{
+							if($this->getSemaphore($type))
+							{
+								$mode = self::AlwaysRefreshMode;
+							}
+							else
+							{
+								$mode = self::CacheOnlyMode;
+							}
+						}
+						$loop = true;
+						break;
+					case self::CacheOnlyMode:
+						if(!$this->exists($type, $key, self::LIFE_IMMORTAL))
+						{
+							throw new Thrush_Cache_NoDataToLoadException();
+						}
+						break;
+					case self::DefaultMode:
+					default:
+						if(!$this->exists($type, $key, $life))
+						{
+							$launchQuery = true;
+						}
+						break;
+				}
+			}
+			
+			// Get Data from query or cache and return it
+			if($launchQuery)
+			{
+				$this->typeModes[$type][2]++;
 				
 				$data = @file_get_contents($url, false, $this->httpContext);
 				$response = Thrush_HTTPException::parseHeaders($http_response_header);
 				
 				if($response['response_code'] === 200)
 				{
-					$this->save($type, $key, $data, $pwd);
+					// Save data only if requested
+					if($this->isEnabled($type))
+					{
+						$this->save($type, $key, $data, $pwd);
+					}
 					
 					// Save last retrieved data
 					$this->lastDate = new DateTime();
@@ -560,8 +688,10 @@
 					throw new Thrush_HTTPException($url, $response);
 				}
 			}
-			
-			return $this->load($type, $key, $pwd);
+			else
+			{
+				return $this->load($type, $key, $pwd);
+			}
 		}
 		
 		/**
@@ -620,6 +750,14 @@
 			{
 				return file_put_contents($this->getDirectory($type).$key, 'CLEAR'.$data);
 			}
+		}
+	}
+	
+	class Thrush_Cache_NoDataToLoadException extends Thrush_Exception
+	{
+		function __construct()
+		{
+			parent::__construct('Error', 'Data not available in cache');
 		}
 	}
 ?>
