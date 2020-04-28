@@ -77,12 +77,23 @@
 
 
 
+		// augmented Backus–Naur form (ABNF):
 		// <variable> = <variableName> ["|" <function>]*
 		// <function> = <functionName> "(" [<functionArgument> ","]* ")"
 		// <functionArgument> = <variableName> / <argument>
-		// <variableName> = [<blockname> "."] <key>
+		// <variableName> = 1*[<blockname> "."] <key>
 		// <blockname> = [a-z0-9_]+
+		// <condition> = <freeContent>
 		// <key> = [A-Z0-9_]+
+		// <freeContent> = [.*?] ; Free content
+		
+		// <begin> = "<!-- BEGIN " <blockname> *1[" ORDER " <key>] " -->"
+		// <end> = "<!-- END " *1[<freeContent> " "] "-->"
+		// <if> = "<!-- IF " <condition> " -->"
+		// <isset> = "<!-- ISSET " <blockname> / <key> " -->"
+		// <else> = "<!-- ELSE " *1[<freeContent> " "] "-->"
+		// <endif> = "<!-- ENDIF " *1[<freeContent> " "] "-->"
+		// <endisset> = "<!-- ENDISSET " *1[<freeContent> " "] "-->"
 		
 		// variable that holds all the data we'll be substituting into
 		// the compiled templates.
@@ -881,10 +892,6 @@
 					{
 						//var_dump($matches);
 						
-						$name = $matches[1][0];
-						
-						$this->assertBlockNameValidity($name, $matches[0][0]);
-						
 						array_pop($block_names);
 						$this->block_nesting_level -= 2;
 						
@@ -903,10 +910,10 @@
 						
 						$name = $matches[1][0];
 						
-						$this->assertBlockNameValidity($name, $matches[0][0]);
-						
 						if(strtoupper($name) === $name)
 						{
+							$this->assertKeyValidity($name, $matches[0][0]);
+							
 							$varref = $this->getPhpStringForBlockKey($block_names, '');
 							
 							// Transformation de la balise
@@ -919,6 +926,8 @@
 						}
 						else
 						{
+							$this->assertBlockNameValidity($name, $matches[0][0]);
+							
 							array_push($block_names, $name);
 							$this->block_nesting_level++;
 							$varref = $this->getPhpStringForBlockKey($block_names, null);
@@ -941,10 +950,6 @@
 					{
 						//var_dump($matches);
 						
-						$name = $matches[1][0];
-						
-						$this->assertBlockNameValidity($name, $matches[0][0]);
-						
 						$ret .= $format[1]."\n"
 							.str_repeat("\t", $this->block_nesting_level).'}'."\n"
 							.str_repeat("\t", $this->block_nesting_level).'else'."\n"
@@ -956,10 +961,6 @@
 					elseif(preg_match('#^<!--\sENDISSET\s(.*?)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
 					{
 						//var_dump($matches);
-						
-						$name = $matches[1][0];
-						
-						$this->assertBlockNameValidity($name, $matches[0][0]);
 						
 						$ret .= $format[1]."\n"
 							.str_repeat("\t", $this->block_nesting_level).'}'."\n"
