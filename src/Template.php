@@ -297,7 +297,7 @@
 		{
 			foreach($keyValues as $key => $values)
 			{
-				$this->checkKey($key);
+				$this->assertKeyValidity($key);
 			}
 			
 			$this->templateData['.'][0] = array_merge($this->templateData['.'][0], $keyValues);
@@ -314,7 +314,7 @@
 		*/
 		public function setRootVariable(string $key, $value)
 		{
-			$this->checkKey($key);
+			$this->assertKeyValidity($key);
 			
 			$this->templateData['.'][0][$key] = $value;
 		}
@@ -334,7 +334,7 @@
 		 */
 		public function setRootVariableHandle(string $key, string $handle)
 		{
-			$this->checkKey($key);
+			$this->assertKeyValidity($key);
 			
 			$this->loadFileForHandle($handle);
 			
@@ -375,13 +375,14 @@
 		* \param string $handle
 		*   The handle to test
 		*
-		* \throws Thrush_Exception If handle is not allowed
+		* \throws Thrush_Template_InvalidPatternException If handle is not allowed
 		*/
-		protected function checkHandle(string $handle)
+		protected function assertBlockNameValidity(string $handle, string $context='')
 		{
-			if(preg_match('/^[a-z0-9_]+$/', $handle) === 0)
+			$pattern = '/^[a-z0-9_]+$/';
+			if(preg_match($pattern, $handle) === 0)
 			{
-				throw new Thrush_Exception('Error', 'Handle "'.$handle.'" shall be made only of lower letters, digits and underscores');
+				throw new Thrush_Template_InvalidPatternException($handle, $pattern, $context);
 			}
 		}
 		
@@ -391,13 +392,14 @@
 		* \param string $key
 		*   The key to test
 		*
-		* \throws Thrush_Exception If key is not allowed
+		* \throws Thrush_Template_InvalidPatternException If key is not allowed
 		*/
-		protected function checkKey(string $key)
+		protected function assertKeyValidity(string $key, string $context='')
 		{
-			if(preg_match('/^[A-Z0-9_]+$/', $key) === 0)
+			$pattern = '/^[A-Z0-9_]+$/';
+			if(preg_match($pattern, $key) === 0)
 			{
-				throw new Thrush_Exception('Error', 'Key "'.$key.'" shall be made only of capitalized letters, digits and underscores');
+				throw new Thrush_Template_InvalidPatternException($key, $pattern, $context);
 			}
 		}
 		
@@ -527,14 +529,9 @@
 		{
 			$ret = '$this->templateData';
 			
-			if($key === '')
+			if($key !== '' && !is_null($key))
 			{
-				$key = null;
-			}
-			
-			if(!is_null($key))
-			{
-				$this->checkKey($key);
+				$this->assertKeyValidity($key);
 			}
 			
 			if(!empty($contexte))
@@ -544,14 +541,14 @@
 				{
 					$ret .= '["'.$name.'."]';
 					
-					if($i < $countContexte-1 || $key !== null)
+					if($i < $countContexte-1 || !is_null($key))
 						$ret .= '[$_'.$name.'_i]';
 				}
 			}
 			else
 				$ret .= '["."][0]';
 			
-			if(!is_null($key))
+			if($key !== '' && !is_null($key))
 				$ret .= '["'.$key.'"]';
 			
 			return $ret;
@@ -804,8 +801,11 @@
 					if(preg_match('#^<!--\sBEGIN\s(.*?)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
 					{
 						//var_dump($matches);
+						
 						$param = mb_decouper(' ', $matches[1][0]);
 						$name = array_shift($param);
+						
+						$this->assertBlockNameValidity($name, $matches[0][0]);
 						
 						$orderBy = '';
 						$orderOrder = '';
@@ -881,6 +881,10 @@
 					{
 						//var_dump($matches);
 						
+						$name = $matches[1][0];
+						
+						$this->assertBlockNameValidity($name, $matches[0][0]);
+						
 						array_pop($block_names);
 						$this->block_nesting_level -= 2;
 						
@@ -896,7 +900,10 @@
 					elseif(preg_match('#^<!--\sISSET\s(.*?)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
 					{
 						//var_dump($matches);
+						
 						$name = $matches[1][0];
+						
+						$this->assertBlockNameValidity($name, $matches[0][0]);
 						
 						if(strtoupper($name) === $name)
 						{
@@ -934,6 +941,10 @@
 					{
 						//var_dump($matches);
 						
+						$name = $matches[1][0];
+						
+						$this->assertBlockNameValidity($name, $matches[0][0]);
+						
 						$ret .= $format[1]."\n"
 							.str_repeat("\t", $this->block_nesting_level).'}'."\n"
 							.str_repeat("\t", $this->block_nesting_level).'else'."\n"
@@ -945,6 +956,10 @@
 					elseif(preg_match('#^<!--\sENDISSET\s(.*?)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
 					{
 						//var_dump($matches);
+						
+						$name = $matches[1][0];
+						
+						$this->assertBlockNameValidity($name, $matches[0][0]);
 						
 						$ret .= $format[1]."\n"
 							.str_repeat("\t", $this->block_nesting_level).'}'."\n"
@@ -1116,7 +1131,7 @@
 		*/
 		protected function compileCondition(string $condition, array $block_names)
 		{
-			return str_replace('$a[', $this->getPhpStringForBlockKey($block_names, "").'[', $condition);
+			return str_replace('$a[', $this->getPhpStringForBlockKey($block_names, '').'[', $condition);
 		}
 		
 		/**
@@ -1257,6 +1272,22 @@
 			}
 			
 			return $_str;
+		}
+	}
+	
+	class Thrush_Template_InvalidPatternException extends Thrush_Exception
+	{
+		function __construct(string $name, string $pattern, string $context='', string $file='', int $line=0)
+		{
+			$str = '"'.$name.'" shall match following pattern: '.$pattern;
+			
+			if($file !== '' && $line > 0)
+				$str = $file.':'.$line.': '.$str;
+			
+			if($context !== '')
+				$str .= ' in "'.str_replace('<', '&lt;', $context).'"';
+			
+			parent::__construct('Error', $str);
 		}
 	}
 ?>
