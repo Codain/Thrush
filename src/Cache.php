@@ -666,7 +666,7 @@
 				$this->typeModes[$type][2]++;
 				
 				$data = @file_get_contents($url, false, $this->httpContext);
-				$response = Thrush_HTTPException::parseHeaders($http_response_header);
+				$response = Thrush_HTTPException::parseHeaders($url, $http_response_header);
 				
 				if($response['response_code'] === 200)
 				{

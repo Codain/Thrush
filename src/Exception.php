@@ -189,7 +189,7 @@
 			
 			$this->response = $http_headers;
 			
-			$this->privateMessage = "Error ".$this->getHTTPCode().": ".$this->response[0]."\n".$url;
+			$this->privateMessage = "Error ".$this->getHTTPCode()." when calling ".$url.": ".$this->response[0];
 		}
 		
 		/**
@@ -206,13 +206,15 @@
 		/**
 		* Parse HTTP header answer to extract data.
 		*
+		* \param string url
+		*   URL of the ressource
 		* \param array headers
 		*   HTTP headers
 		*
 		* \return array
 		*   Array of data
 		*/
-		static function parseHeaders(array $headers)
+		static function parseHeaders(string $url, array $headers)
 		{
 			$head = array();
 			
@@ -229,6 +231,11 @@
 					if( preg_match( "#HTTP/[0-9\.]+\s+([0-9]+)#",$v, $out ) )
 						$head['response_code'] = intval($out[1]);
 				}
+			}
+			
+			if(!array_key_exists('response_code', $head))
+			{
+				throw new Thrush_Exception('Error', 'Unnable to extract return code when calling '.$url.': '.print_r($headers, true));
 			}
 			
 			return $head;
