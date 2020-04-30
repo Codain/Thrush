@@ -104,5 +104,29 @@
 			
 			$this->incExistsLoadSaveRemove($type, $key, $data, $pwd);
 		}
+		
+		public function testHttpError404()
+		{
+			$cache = new Thrush_Cache('localhost', 'localhost', './cache/');
+			$type = 'CacheTest';
+			
+			$cache->enable($type);
+			
+			$this->expectException(Thrush_HTTPException::class);
+			
+			$cache->loadURLFromWebOrCache($type, 'https://httpstat.us/404', '404', Thrush_Cache::LIFE_IMMORTAL, '');
+		}
+		
+		public function testHttpError500()
+		{
+			$cache = new Thrush_Cache('localhost', 'localhost', './cache/');
+			$type = 'CacheTest';
+			
+			$cache->enable($type);
+			
+			$this->expectException(Thrush_HTTPException::class);
+			
+			$cache->loadURLFromWebOrCache($type, 'https://httpstat.us/500', '500', Thrush_Cache::LIFE_IMMORTAL, '');
+		}
 	}
 ?>
