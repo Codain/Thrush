@@ -35,7 +35,15 @@
 	*/
 	class Thrush_Exception extends Exception
 	{
+		/**
+		* string Private debug message, for administrators only.
+		*/
 		protected $privateMessage = '';
+		
+		/**
+		* bool Set wether to display backtrace or not.
+		*/
+		protected $showTrace = true;
 		
 		/**
 		* Thrush_Exception constructor
@@ -128,32 +136,37 @@
 			$trace  = $e->getTrace();
 			$prev   = $e->getPrevious();
 			$result[] = sprintf('%s%s: %s', $starter, get_class($e), Thrush_Exception::getPrivateMessageIfAny($e));
-			$file = $e->getFile();
-			$line = $e->getLine();
 			
-			while (true)
+			// Display backtrace only if requested
+			if(!($e instanceof Thrush_Exception) || $e->showTrace)
 			{
-				$current = "$file:$line";
-				/*if (is_array($seen) && in_array($current, $seen)) {
-					$result[] = sprintf(' ... %d more', count($trace)+1);
-					break;
-				}*/
-				$result[] = sprintf(' at %s%s%s(%s%s%s)',
-											count($trace) && array_key_exists('class', $trace[0]) ? str_replace('\\', '.', $trace[0]['class']) : '',
-											count($trace) && array_key_exists('class', $trace[0]) && array_key_exists('function', $trace[0]) ? '.' : '',
-											count($trace) && array_key_exists('function', $trace[0]) ? str_replace('\\', '.', $trace[0]['function']) : '(main)',
-											$line === null ? $file : basename($file),
-											$line === null ? '' : ':',
-											$line === null ? '' : $line);
-				if(is_array($seen))
-					$seen[] = "$file:$line";
+				$file = $e->getFile();
+				$line = $e->getLine();
 				
-				if(!count($trace))
-					break;
-				
-				$file = array_key_exists('file', $trace[0]) ? $trace[0]['file'] : 'Unknown Source';
-				$line = array_key_exists('file', $trace[0]) && array_key_exists('line', $trace[0]) && $trace[0]['line'] ? $trace[0]['line'] : null;
-				array_shift($trace);
+				while (true)
+				{
+					$current = "$file:$line";
+					/*if (is_array($seen) && in_array($current, $seen)) {
+						$result[] = sprintf(' ... %d more', count($trace)+1);
+						break;
+					}*/
+					$result[] = sprintf(' at %s%s%s(%s%s%s)',
+												count($trace) && array_key_exists('class', $trace[0]) ? str_replace('\\', '.', $trace[0]['class']) : '',
+												count($trace) && array_key_exists('class', $trace[0]) && array_key_exists('function', $trace[0]) ? '.' : '',
+												count($trace) && array_key_exists('function', $trace[0]) ? str_replace('\\', '.', $trace[0]['function']) : '(main)',
+												$line === null ? $file : basename($file),
+												$line === null ? '' : ':',
+												$line === null ? '' : $line);
+					if(is_array($seen))
+						$seen[] = "$file:$line";
+					
+					if(!count($trace))
+						break;
+					
+					$file = array_key_exists('file', $trace[0]) ? $trace[0]['file'] : 'Unknown Source';
+					$line = array_key_exists('file', $trace[0]) && array_key_exists('line', $trace[0]) && $trace[0]['line'] ? $trace[0]['line'] : null;
+					array_shift($trace);
+				}
 			}
 			
 			$result = join("\n", $result);
@@ -239,6 +252,27 @@
 			}
 			
 			return $head;
+		}
+	}
+	
+	/**
+	* A Thrush_DeprecatedException warns about deprecated functions or piece of code
+	*/
+	class Thrush_DeprecatedException extends Thrush_Exception
+	{
+		/**
+		* Constructor.
+		*/
+		function __construct()
+		{
+			$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+			
+			$where = $trace[1];
+			
+			$msg = sprintf('%s() is deprecated, called from %s:%d', (array_key_exists('class', $where)?$where['class'].'::':'').$where['function'], $where['file'], $where['line']);
+			
+			parent::__construct('Error', $msg, 0);
+			$this->showTrace = false;
 		}
 	}
 ?>
