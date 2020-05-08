@@ -89,13 +89,13 @@
 		* Retrieve the error message of an Exception, the private one if it 
 		* exists, otherwise the public one.
 		*
-		* \param Exception $e
+		* \param Throwable $e
 		*   The Exception
 		* 
 		* \return string
 		*   The message
 		*/
-		static function getPrivateMessageIfAny(Exception $e)
+		static function getPrivateMessageIfAny(Throwable $e)
 		{
 			if($e instanceof Thrush_Exception)
 			{
@@ -108,7 +108,7 @@
 		/**
 		* Retrieve the trace of an Exception.
 		*
-		* \param Exception $e
+		* \param Throwable $e
 		*   The Exception
 		* \param array $seen
 		*   Array of files and lines seen to avoid recursion (internal 
@@ -117,7 +117,7 @@
 		* \return string
 		*   The trace
 		*/
-		static function formatToString(Exception $e, array $seen=null)
+		static function formatToString(Throwable $e, array $seen=null)
 		{
 			$starter = $seen ? 'Caused by: ' : '';
 			$result = array();
