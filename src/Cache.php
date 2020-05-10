@@ -603,6 +603,10 @@
 		*
 		* \see exists()
 		* \see load()
+		
+		* \throws Thrush_Exception If external ressource cannot be reached
+		* \throws Thrush_Cache_NoDataToLoadException If data shall be retrieved from cache but are not available.
+		* \throws Thrush_HTTPException If HTTP code different from 200
 		*/
 		public function loadURLFromWebOrCache(string $type, string $url, string $key=null, $life=self::LIFE_IMMORTAL, string $pwd='')
 		{
@@ -666,6 +670,12 @@
 				$this->typeModes[$type][2]++;
 				
 				$data = @file_get_contents($url, false, $this->httpContext);
+				
+				if(!isset($http_response_header))
+				{
+					throw new Thrush_Exception('Error', 'Unable to retrieve data from '.$url.', probably due to timeout?');
+				}
+				
 				$response = Thrush_HTTPException::parseHeaders($url, $http_response_header);
 				
 				if($response['response_code'] === 200)
