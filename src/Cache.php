@@ -729,6 +729,35 @@
 		}
 		
 		/**
+		* Move data in cache.
+		* If data does not exists, do nothing.
+		* 
+		* \param string $fromType
+		*   Name of the cache where to retrieve data
+		* \param string $fromKey
+		*   Key associated to the data to retrieve
+		* \param string $toType
+		*   New cache name to store data
+		* \param string $toKey
+		*   New key to store data
+		* 
+		* \return bool
+		*   True if there is no error, false otherwise
+		*/
+		public function move(string $fromType, string $fromKey, string $toType, string $toKey)
+		{
+			$oldname = $this->getFullPath($fromType, $fromKey);
+			$newname = $this->getFullPath($toType, $toKey);
+			
+			if(file_exists($oldname))
+			{
+				return rename($oldname, $newname);
+			}
+			
+			return false;
+		}
+		
+		/**
 		* Store some data in cache.
 		* 
 		* \param string $type
