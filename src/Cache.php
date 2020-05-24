@@ -705,6 +705,78 @@
 		}
 		
 		/**
+		* Automatically issue a 304 response code when appropriated before a content is generated.
+		* If a data is available in cache and the client has a cached version and that version 
+		* is up to date, send a 304 HTTP response code and return \c true.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* \param int $life
+		*   Cache life in seconds
+		* 
+		* \return bool
+		*   \c true if a 304 response code has been sent, \c false otherwise
+		*/
+		public function autoReplyIfNotModified(string $type, string $key, $life=self::LIFE_IMMORTAL)
+		{
+			// If data exists in cache and is not expired...
+			if($this->exists($type, $key, $life))
+			{
+				// ... and if client already has a previous version
+				if(isset($_SERVER) && array_key_exists('HTTP_IF_MODIFIED_SINCE', $_SERVER))
+				{
+					$ifModifiedSince = DateTime::createFromFormat('D, d M Y H:i:s \G\M\T', $_SERVER['HTTP_IF_MODIFIED_SINCE']);
+					$lastModified = new DateTime();
+					$lastModified->setTimestamp($this->getCreationTime($type, $key));
+					
+					// ... and if this previous version has not expired
+					if($ifModifiedSince >= $lastModified)
+					{
+						// ... then we send a Not modified header
+						http_response_code(304);
+						
+						if(isset($_SERVER) && array_key_exists('HTTP_IF_NONE_MATCH', $_SERVER))
+						{
+							header('ETag: '.$_SERVER['HTTP_IF_NONE_MATCH']);
+						}
+						
+						return true;
+					}
+				}
+			}
+			
+			return false;
+		}
+		
+		/**
+		* Automatically issue a 304 response code when appropriated once a content has been generated.
+		* If the client sent a ETag HTTP header and it matches the one of the generated content, then
+		* send a 304 HTTP response code and return \c true.
+		* In all cases this function will send an ETag response header.
+		* 
+		* \param string $data
+		*   The data to generate the hash
+		* 
+		* \return bool
+		*   \c true if a 304 response code has been sent, \c false otherwise
+		*/
+		public function autoReplyIfNoneMatch(string $data)
+		{
+			$hash = md5($data);
+			header('ETag: '.$hash);
+			
+			if(isset($_SERVER) && array_key_exists('HTTP_IF_NONE_MATCH', $_SERVER) && $_SERVER['HTTP_IF_NONE_MATCH'] === $hash)
+			{
+				http_response_code(304);
+				return true;
+			}
+			
+			return false;
+		}
+		
+		/**
 		* Remove data from cache.
 		* 
 		* \param string $type
