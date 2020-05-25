@@ -762,15 +762,18 @@
 		* \return bool
 		*   \c true if a 304 response code has been sent, \c false otherwise
 		*/
-		public function autoReplyIfNoneMatch(string $data)
+		static public function autoReplyIfNoneMatch(string $data)
 		{
-			$hash = md5($data);
-			header('ETag: '.$hash);
-			
-			if(isset($_SERVER) && array_key_exists('HTTP_IF_NONE_MATCH', $_SERVER) && $_SERVER['HTTP_IF_NONE_MATCH'] === $hash)
+			if(http_response_code() !== 304)
 			{
-				http_response_code(304);
-				return true;
+				$hash = md5($data);
+				header('ETag: '.$hash);
+				
+				if(isset($_SERVER) && array_key_exists('HTTP_IF_NONE_MATCH', $_SERVER) && $_SERVER['HTTP_IF_NONE_MATCH'] === $hash)
+				{
+					http_response_code(304);
+					return true;
+				}
 			}
 			
 			return false;
