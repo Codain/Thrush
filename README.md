@@ -9,6 +9,7 @@
   - RC4 encryption
   - API
     - Nominatim ([lookup](https://nominatim.org/release-docs/develop/api/Lookup/) and [reverse](https://nominatim.org/release-docs/develop/api/Reverse/) only)
+    - OpenLibrary ([books](https://openlibrary.org/dev/docs/api/books) only)
     - Wikipedia ([TextExtracts](https://en.wikipedia.org/w/api.php?action=help&modules=query%2Bextracts) only)
 - Developed but not yet published features:
   - Database (expanding native PDO)
