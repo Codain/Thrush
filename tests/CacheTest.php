@@ -114,7 +114,7 @@
 			
 			$this->expectException(Thrush_HTTPException::class);
 			
-			$cache->loadURLFromWebOrCache($type, 'https://httpstat.us/404', '404', Thrush_Cache::LIFE_IMMORTAL, '');
+			$cache->loadURLFromWebOrCache($type, 'https://httpstat.us/404', null, '404', Thrush_Cache::LIFE_IMMORTAL, '');
 		}
 		
 		public function testHttpError500()
@@ -126,7 +126,7 @@
 			
 			$this->expectException(Thrush_HTTPException::class);
 			
-			$cache->loadURLFromWebOrCache($type, 'https://httpstat.us/500', '500', Thrush_Cache::LIFE_IMMORTAL, '');
+			$cache->loadURLFromWebOrCache($type, 'https://httpstat.us/500', null, '500', Thrush_Cache::LIFE_IMMORTAL, '');
 		}
 	}
 ?>

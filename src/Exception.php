@@ -240,9 +240,12 @@
 				}
 				else
 				{
-					$head[] = $v;
-					if( preg_match( "#HTTP/[0-9\.]+\s+([0-9]+)#",$v, $out ) )
+					if(preg_match( "#HTTP/[0-9\.]+\s+([0-9]+)#",$v, $out))
+					{
 						$head['response_code'] = intval($out[1]);
+					}
+					
+					$head[] = $v;
 				}
 			}
 			
@@ -252,6 +255,43 @@
 			}
 			
 			return $head;
+		}
+	}
+	
+	/**
+	* A Thrush_CurlException brings additional functions specific to HTTP Exceptions
+	*/
+	class Thrush_CurlException extends Thrush_Exception
+	{
+		/**
+		* array Array of cURL informations
+		*/
+		protected $response = null;
+		
+		/**
+		* Constructor.
+		*
+		* \param ressource cURL object
+		*   cURL object to analyse
+		*/
+		function __construct(ressource $curl, string $data)
+		{
+			parent::__construct('Error', '', 0);
+			
+			$this->response = curl_getinfo($curl);
+			
+			$this->privateMessage = "Error ".$this->getHTTPCode()." when calling ".$this->response['url'].": ".$data;
+		}
+		
+		/**
+		* Get HTTP return code.
+		*
+		* \return int
+		*   HTTP error code
+		*/
+		function getHTTPCode()
+		{
+			return $this->response['http_code'];
 		}
 	}
 	

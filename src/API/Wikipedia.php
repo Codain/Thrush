@@ -96,7 +96,7 @@
 			// Fetch data
 			try
 			{
-				$data = $this->cache->loadURLFromWebOrCache('wikipedia', $endpointUrl.'?'.$queryString, null, Thrush_Cache::LIFE_IMMORTAL);
+				$data = $this->cache->loadURLFromWebOrCache('wikipedia', $endpointUrl.'?'.$queryString, null, null, Thrush_Cache::LIFE_IMMORTAL);
 				
 				return json_decode($data, true);
 			}

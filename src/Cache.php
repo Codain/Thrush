@@ -72,11 +72,6 @@
 		protected $websiteURL = '';
 		
 		/**
-		* string HTTP Context (for HTTP requests).
-		*/
-		protected $httpContext = null;
-		
-		/**
 		* DateTime Date of the last retrieved data.
 		*/
 		protected $lastDate = null;
@@ -326,15 +321,6 @@
 			$this->root = $root;
 			$this->websiteName = $websiteName;
 			$this->websiteURL = $websiteURL;
-			
-			$options = array(
-				'http' => array(
-					'method' => "GET",
-					'header' => "User-Agent: ".$this->websiteName." (".$this->websiteURL.")\r\n"
-				)
-			);
-			
-			$this->httpContext = stream_context_create($options);
 		}
 		
 		/**
@@ -591,6 +577,8 @@
 		*   Name of the cache to use
 		* \param string $url
 		*   URL of the data to load
+		* \param array $postData
+		*   Data to send (will switch to POST mode if not null)
 		* \param string $key
 		*   Key associated to the data (null to generate one from URL)
 		* \param int $life
@@ -608,11 +596,11 @@
 		* \throws Thrush_Cache_NoDataToLoadException If data shall be retrieved from cache but are not available.
 		* \throws Thrush_HTTPException If HTTP code different from 200
 		*/
-		public function loadURLFromWebOrCache(string $type, string $url, string $key=null, $life=self::LIFE_IMMORTAL, string $pwd='')
+		public function loadURLFromWebOrCache(string $type, string $url, array $postData=null, string $key=null, $life=self::LIFE_IMMORTAL, string $pwd='')
 		{
 			if(is_null($key))
 			{
-				$key = md5($url);
+				$key = md5($url.(is_null($postData)?'':serialize($postData)));
 			}
 			
 			//echo '<span style="color: red;">CACHE: Loading type '.$type.' with URL '.$url.' (key '.$key.') and life '.$life.'</span><br />';
@@ -669,16 +657,28 @@
 			{
 				$this->typeModes[$type][2]++;
 				
-				$data = @file_get_contents($url, false, $this->httpContext);
+				$ch = curl_init();
+				curl_setopt($ch, CURLOPT_URL, $url); 
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
+				curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+				curl_setopt($ch, CURLOPT_USERAGENT, $this->websiteName.' ('.$this->websiteURL.')');
 				
-				if(!isset($http_response_header))
+				// If we have to be in POST mode
+				if(!is_null($postData))
 				{
-					throw new Thrush_Exception('Error', 'Unable to retrieve data from '.$url.', probably due to timeout?');
+					curl_setopt($ch, CURLOPT_POST, 1);
+					curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
+				}
+				else
+				{
+					curl_setopt($ch, CURLOPT_POST, 0);
 				}
 				
-				$response = Thrush_HTTPException::parseHeaders($url, $http_response_header);
+				$data = curl_exec($ch);
 				
-				if($response['response_code'] === 200)
+				$responseCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+				
+				if($responseCode === 200)
 				{
 					// Save data only if requested
 					if($this->isEnabled($type))
@@ -691,11 +691,13 @@
 					$this->lastDateType = $type;
 					$this->lastDateKey = $key;
 					
+					curl_exec($ch);
+					
 					return $data;
 				}
 				else
 				{
-					throw new Thrush_HTTPException($url, $response);
+					throw new Thrush_CurlException($ch, $data);
 				}
 			}
 			else
