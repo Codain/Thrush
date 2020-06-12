@@ -274,7 +274,7 @@
 		* \param ressource cURL object
 		*   cURL object to analyse
 		*/
-		function __construct(resource $curl, string $data)
+		function __construct($curl, string $data)
 		{
 			parent::__construct('Error', '', 0);
 			
