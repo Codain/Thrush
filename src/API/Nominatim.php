@@ -156,18 +156,21 @@
 				'format' => 'json',
 				'osm_ids' => implode(',', $keys )
 				);
+			$key = 'ids_'.$attributes['osm_ids'];
 				
 			if(!is_null($acceptLanguages))
 			{
 				$attributes['accept-language'] = implode(',', $acceptLanguages);
+				$key .= '_'.$attributes['accept-language'];
 			}
+			$key .= '.json';
 			
 			$queryString = http_build_query($attributes);
 			
 			try
 			{
 				// Fetch data
-				$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?'.$queryString, null, null, Thrush_Cache::LIFE_IMMORTAL);
+				$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?'.$queryString, null, $key, Thrush_Cache::LIFE_IMMORTAL);
 				
 				return json_decode($data, true);
 			}
@@ -210,18 +213,21 @@
 				'lat' => $lat,
 				'lon' => $lon
 				);
+			$key = 'coord_'.$lat.'_'.$lon;
 				
 			if(!is_null($acceptLanguages))
 			{
 				$attributes['accept-language'] = implode(',', $acceptLanguages);
+				$key .= '_'.$attributes['accept-language'];
 			}
+			$key .= '.json';
 			
 			$queryString = http_build_query($attributes);
 			
 			try
 			{
 				// Fetch data
-				$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?'.$queryString, null, null, Thrush_Cache::LIFE_IMMORTAL);
+				$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?'.$queryString, null, $key, Thrush_Cache::LIFE_IMMORTAL);
 			
 				return json_decode($data, true);
 			}
