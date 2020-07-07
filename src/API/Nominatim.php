@@ -32,6 +32,7 @@
 	 
 	require_once __DIR__.'/../Cache.php';
 	require_once __DIR__.'/../Exception.php';
+	require_once __DIR__.'/../Misc/OsmObjects.php';
 	
 	/**
 	* Query a Nominatim server to get data
@@ -90,7 +91,56 @@
 		* \return array|null
 		*   JSON array of the result (see https://nominatim.org/release-docs/develop/api/Lookup/) or null
 		*/
-		public function queryByObject(array $keys, array $acceptLanguages=null)
+		public function queryByObject(Thrush_OpenStreetMap_Object $obj, array $acceptLanguages=null)
+		{
+			$res = null;
+			$forceByCoordinate = false;
+			do
+			{
+				if($forceByCoordinate || (!$obj->hasTag('name') && !$obj->hasTag('addr:housenumber')))
+				{
+					$coordinates = $obj->getCenter();
+					
+					if(!is_null($coordinates))
+					{
+						$res = $this->queryByCoordinate($coordinates[0], $coordinates[1], $acceptLanguages);
+					}
+					
+					$forceByCoordinate = false;
+				}
+				else
+				{
+					$res = $this->queryByObjectsId(array($obj->getUid()), $acceptLanguages);
+					if(!is_null($res) && !empty($res))
+					{
+						$res = $res[0];
+					}
+					else
+					{
+						$forceByCoordinate = true;
+					}
+				}
+			} while($forceByCoordinate);
+			
+			return $res;
+		}
+		
+		/**
+		* Query Nominatim server for the address of one or more OSM objects.
+		* Execute a Nominatim Lookup command (see https://nominatim.org/release-docs/develop/api/Lookup/).
+		*
+		* \param array $keys
+		*   Array of OSM objects to look for (a node is Nxxx, a Way is Wxxx and a 
+		*   relation is Rxxx)
+		* \param array $acceptLanguages
+		*   List of languages to consider for the result (optional, default null). Either 
+		*   use a standard RFC2616 accept-language string or a simple comma-
+		*   separated list of language codes.
+		*
+		* \return array|null
+		*   JSON array of the result (see https://nominatim.org/release-docs/develop/api/Lookup/) or null
+		*/
+		public function queryByObjectsId(array $keys, array $acceptLanguages=null)
 		{
 			$endpointUrl = 'https://nominatim.openstreetmap.org/lookup';
 			
