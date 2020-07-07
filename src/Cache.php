@@ -392,8 +392,10 @@
 		*/
 		public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL)
 		{
+			$fullPath = $this->getFullPath($type, $key);
+			
 			// If data exists in the cache
-			if(file_exists($this->getFullPath($type, $key)))
+			if(file_exists($fullPath))
 			{
 				// Return whether it is still valid or not
 				if($life <= 0)
@@ -799,8 +801,10 @@
 		*/
 		public function remove(string $type, string $key)
 		{
-			if(file_exists($this->getDirectory($type).$key))
-				return unlink($this->getDirectory($type).$key);
+			$fullPath = $this->getFullPath($type, $key);
+			
+			if(file_exists($fullPath))
+				return unlink($fullPath);
 			
 			return true;
 		}
@@ -855,16 +859,18 @@
 		*/
 		public function save(string $type, string $key, string &$data, string $pwd='')
 		{
+			$fullPath = $this->getFullPath($type, $key);
+			
 			if($pwd !== '')
 			{
 				$data2 = $this->pwdCheck.$data;
 				Thrush_Crypt::encrypt($data2, $pwd);
 				
-				return file_put_contents($this->getDirectory($type).$key, 'CRYPT'.$data2);
+				return file_put_contents($fullPath, 'CRYPT'.$data2);
 			}
 			else
 			{
-				return file_put_contents($this->getDirectory($type).$key, 'CLEAR'.$data);
+				return file_put_contents($fullPath, 'CLEAR'.$data);
 			}
 		}
 	}
