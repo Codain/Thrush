@@ -111,6 +111,11 @@
 		*/
 		protected $defaultEnabled = false;
 		
+		/**
+		* int Timestamp to evaluate item life
+		*/
+		protected $time = null;
+		
 		protected function initMode(string $type)
 		{
 			$this->typeModes[$type] = array($this->defaultMode, $this->defaultSemaphore, 0, $this->defaultEnabled);
@@ -321,6 +326,9 @@
 			$this->root = $root;
 			$this->websiteName = $websiteName;
 			$this->websiteURL = $websiteURL;
+			
+			// Initialise timestamp for all date evaluations
+			$this->time = time();
 		}
 		
 		/**
@@ -404,7 +412,7 @@
 				}
 				else
 				{
-					return ((time()-$this->getCreationTime($type, $key)) < $life);
+					return (($this->time-$this->getCreationTime($type, $key)) < $life);
 				}
 			}
 			
