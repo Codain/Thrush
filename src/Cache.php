@@ -116,9 +116,22 @@
 		*/
 		protected $time = null;
 		
+		/**
+		* Initialize a given type of cache.
+		*
+		* \param string $type
+		*   Name of the cache to use
+		*
+		* \throws Thrush_Exception If unable to initialize a cURL ressource
+		*/
 		protected function initMode(string $type)
 		{
-			$this->typeModes[$type] = array($this->defaultMode, $this->defaultSemaphore, 0, $this->defaultEnabled);
+			$this->typeModes[$type] = array(
+				$this->defaultMode, 
+				$this->defaultSemaphore, 
+				0, 
+				$this->defaultEnabled,
+				null);
 		}
 		
 		/**
@@ -308,6 +321,7 @@
 		
 		/**
 		* Constructor.
+		* For performance reasons it is highly recommended for \c $root to be an absolute path (see \c realpath()).
 		* 
 		* \param string $websiteName
 		*   Website name, used in HTTP User-Agent attribute
@@ -332,6 +346,20 @@
 		}
 		
 		/**
+		* Destructor.
+		*/
+		function __destruct()
+		{
+			foreach($this->typeModes as $typeMode)
+			{
+				if(!is_null($typeMode[4]))
+				{
+					curl_close($typeMode[4]);
+				}
+			}
+		}
+		
+		/**
 		* Remove all data of a given cache type.
 		* 
 		* \param string $type
@@ -347,10 +375,11 @@
 		public function clear(string $type, string $glob='')
 		{
 			$nb = -1;
+			$dir = $this->root.$type.'/';
 			
 			if($glob !== '')
 			{
-				$arr = glob($this->getDirectory($type).$glob);
+				$arr = glob($dir.$glob);
 				$nb = count($arr);
 				
 				foreach($arr as $file)
@@ -358,8 +387,6 @@
 			}
 			else
 			{
-				$dir = $this->getDirectory($type);
-				
 				if ($handle = opendir($dir))
 				{
 					$nb = 0;
@@ -436,26 +463,6 @@
 		}
 		
 		/**
-		* Get path to a cache type, no matter if it exist or not.
-		* 
-		* \param string $type
-		*   Name of the cache to use
-		* 
-		* \return string
-		*   Path from root
-		*
-		* \see getRoot()
-		* \see getFullPath()
-		*/
-		public function getDirectory(string $type)
-		{
-			if($type !== '')
-				return $this->root.$type.'/';
-			else
-				return $this->root;
-		}
-		
-		/**
 		* Get creation date of last data.
 		* 
 		* \return DateTime
@@ -484,11 +491,13 @@
 		*   Path from root
 		*
 		* \see getRoot()
-		* \see getDirectory()
 		*/
 		public function getFullPath(string $type, string $key)
 		{
-			return $this->getDirectory($type).$key;
+			if($type === '')
+				return $this->root.$key;
+			
+			return $this->root.$type.'/'.$key;
 		}
 		
 		/**
@@ -497,7 +506,7 @@
 		* \return string
 		*   Path
 		*
-		* \see getDirectory()
+		* \see getFullPath()
 		*/
 		public function getRoot()
 		{
@@ -667,26 +676,43 @@
 			{
 				$this->typeModes[$type][2]++;
 				
-				$ch = curl_init();
-				curl_setopt($ch, CURLOPT_URL, $url); 
-				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
-				curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-				curl_setopt($ch, CURLOPT_USERAGENT, $this->websiteName.' ('.$this->websiteURL.')');
+				// If it is the first time we request to this type of cache, we initialize a cURL ressource
+				if(is_null($this->typeModes[$type][4]))
+				{
+					$curl = curl_init();
+					
+					if($curl === false)
+					{
+						throw new Thrush_Exception('Error', 'Unable to initialize a new cURL ressource');
+					}
+					
+					curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+					curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+					curl_setopt($curl, CURLOPT_USERAGENT, $this->websiteName.' ('.$this->websiteURL.')');
+					
+					$this->typeModes[$type][4] = $curl;
+				}
+				else
+				{
+					$curl = $this->typeModes[$type][4];
+				}
+				
+				curl_setopt($curl, CURLOPT_URL, $url);
 				
 				// If we have to be in POST mode
 				if(!is_null($postData))
 				{
-					curl_setopt($ch, CURLOPT_POST, 1);
-					curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
+					curl_setopt($curl, CURLOPT_POST, 1);
+					curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($postData));
 				}
 				else
 				{
-					curl_setopt($ch, CURLOPT_POST, 0);
+					curl_setopt($curl, CURLOPT_POST, 0);
 				}
 				
-				$data = curl_exec($ch);
+				$data = curl_exec($curl);
 				
-				$responseCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+				$responseCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 				
 				if($responseCode === 200)
 				{
@@ -701,13 +727,11 @@
 					$this->lastDateType = $type;
 					$this->lastDateKey = $key;
 					
-					curl_exec($ch);
-					
 					return $data;
 				}
 				else
 				{
-					throw new Thrush_CurlException($ch, $data);
+					throw new Thrush_CurlException($curl, $data);
 				}
 			}
 			else
