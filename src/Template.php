@@ -186,7 +186,7 @@
 			$this->compiled_code = array();
 			$this->uncompiled_code = array();
 			
-			$this->setCurrentTheme('defaut');
+			$this->setCurrentTheme('default');
 		}
 		
 		/**
@@ -218,6 +218,84 @@
 		public function setCache(Thrush_Cache $obj)
 		{
 			$this->cache = $obj;
+		}
+		
+		/**
+		* This is an enhanced version of PHP explode function which takes care of brackets and quotes
+		*
+		* \param string $key
+		*   The key to use to explode the string
+		* \param string $str
+		*   The string to explode
+		* \param int $nb
+		*   The number of chunks to return (-1 to return all chunks)
+		*
+		* \return array
+		*   Array of string chunkss
+		*/
+		static function explodeConsideringPunctuation(string $key, string $str, int $nb=-1)
+		{
+			$ret = Array();
+			
+			if($nb === -1)
+				$nb = PHP_INT_MAX-1;
+			
+			/*if($key == '}')
+				echo '<hr />'.$str.' selon '.$key.' avec nb='.$nb;*/
+			
+			// On calcule la taille de la chaîne pour éviter de dépasser la fin
+			$length = mb_strlen($str);
+			
+			// On calcul le nombre maximum d'itération pour éviter de parser la chaîne 
+			// entre le dernier séparateur et la fin de la chaîne
+			$nbMax = min(mb_substr_count($str, $key), $nb);
+			
+			while($length > 0 && $nbMax > 0)
+			{
+				$count = 0;
+				$in = '';
+				$pos = 0;
+				
+				// On positionne le curseur $pos devant la prochaine occurence du séparateur
+				while($pos < $length)
+				{
+					$char = mb_substr($str, $pos, 1);
+					
+					if($char === '\\')
+						$pos++;
+					elseif($in === '')
+					{
+						if($char === $key && $count === 0)
+							break;
+						elseif($char === '(')
+							$count++;
+						elseif($char === ')')
+							$count--;
+						elseif($char === '"' || $char === "'")
+							$in = $char;
+					}
+					elseif($in === $char)
+						$in = '';
+					
+					$pos++;
+				}
+				
+				// On empile la première partie jusqu'au séparateur détecté
+				$ret[] = mb_substr($str, 0, $pos);
+				
+				// On retranche la partie retirée ainsi que le séparateur
+				$str = mb_substr($str, $pos+1);
+				$length -= $pos+1;
+				$nbMax--;
+			}
+			
+			if($length > 0)
+				$ret[] = $str;
+			
+			/*if($key == '|')
+				var_dump($ret);*/
+				
+			return $ret;
 		}
 		
 		
@@ -813,7 +891,7 @@
 					{
 						//var_dump($matches);
 						
-						$param = mb_decouper(' ', $matches[1][0]);
+						$param = $this->explodeConsideringPunctuation(' ', $matches[1][0]);
 						$name = array_shift($param);
 						
 						$this->assertBlockNameValidity($name, $matches[0][0]);
@@ -971,7 +1049,7 @@
 					elseif(preg_match('#^<!--\sIF\s(.*?)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
 					{
 						//var_dump($matches);
-						list($name, $condition) = mb_decouper(' ', $matches[1][0], 1);
+						list($name, $condition) = $this->explodeConsideringPunctuation(' ', $matches[1][0], 1);
 						$name = $this->compileVariable($name, false);
 						
 						// Transformation de la balise
@@ -1008,7 +1086,7 @@
 				{
 					$contentToCompile = substr($content, $offset+1);
 					
-					$var = mb_decouper('}', $contentToCompile, 1);
+					$var = $this->explodeConsideringPunctuation('}', $contentToCompile, 1);
 					
 					$code = $this->compileVariable($var[0], true);
 					
@@ -1073,7 +1151,7 @@
 			$varAdded = false;
 			if($functionParameters != '')
 			{
-				$functionParameters = mb_decouper(',', $functionParameters);
+				$functionParameters = $this->explodeConsideringPunctuation(',', $functionParameters);
 				array_walk($functionParameters, create_function('&$val', '$val = trim($val);'));
 				foreach($functionParameters as $cle => $parametre)
 				{
@@ -1198,7 +1276,7 @@
 		protected function compileVariable(string $variable, bool $addIsset=false)
 		{
 			$str = '';
-			$blocs = mb_decouper('|', $variable);
+			$blocs = $this->explodeConsideringPunctuation('|', $variable);
 			$variableBrut = array_shift($blocs);
 			
 			$variable = $this->compileVariableNameOrFunctionArgument($variableBrut);
