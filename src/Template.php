@@ -1152,7 +1152,7 @@
 			if($functionParameters != '')
 			{
 				$functionParameters = $this->explodeConsideringPunctuation(',', $functionParameters);
-				array_walk($functionParameters, create_function('&$val', '$val = trim($val);'));
+				array_map("trim", $functionParameters);
 				foreach($functionParameters as $cle => $parametre)
 				{
 					if($parametre === 'this')
