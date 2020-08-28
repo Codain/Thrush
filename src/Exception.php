@@ -259,9 +259,31 @@
 	}
 	
 	/**
-	* A Thrush_CurlException brings additional functions specific to HTTP Exceptions
+	* A Thrush_CurlException brings additional functions specific to cURL errors
 	*/
 	class Thrush_CurlException extends Thrush_Exception
+	{
+		/**
+		* Constructor.
+		*
+		* \param ressource cURL object
+		*   cURL object to analyse
+		*/
+		function __construct($curl, string $data)
+		{
+			parent::__construct('Error', '', 0);
+			
+			$errorNumber = curl_errno($curl);
+			$errorString = curl_error($curl);
+			
+			$this->privateMessage = 'cURL Error '.$errorNumber.': '.$errorString;
+		}
+	}
+	
+	/**
+	* A Thrush_CurlHttpException brings additional functions specific to HTTP Exceptions
+	*/
+	class Thrush_CurlHttpException extends Thrush_Exception
 	{
 		/**
 		* array Array of cURL informations
@@ -280,7 +302,7 @@
 			
 			$this->response = curl_getinfo($curl);
 			
-			$this->privateMessage = "Error ".$this->getHTTPCode()." when calling ".$this->response['url'].": ".$data;
+			$this->privateMessage = 'HTTP status code '.$this->getHTTPCode().' when calling '.$this->response['url'].': '.$data;
 		}
 		
 		/**

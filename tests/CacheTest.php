@@ -112,7 +112,7 @@
 			
 			$cache->enable($type);
 			
-			$this->expectException(Thrush_CurlException::class);
+			$this->expectException(Thrush_CurlHttpException::class);
 			
 			$cache->loadURLFromWebOrCache($type, 'https://httpstat.us/404', null, '404', Thrush_Cache::LIFE_IMMORTAL, '');
 		}
@@ -124,7 +124,7 @@
 			
 			$cache->enable($type);
 			
-			$this->expectException(Thrush_CurlException::class);
+			$this->expectException(Thrush_CurlHttpException::class);
 			
 			$cache->loadURLFromWebOrCache($type, 'https://httpstat.us/500', null, '500', Thrush_Cache::LIFE_IMMORTAL, '');
 		}

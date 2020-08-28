@@ -712,6 +712,11 @@
 				
 				$data = curl_exec($curl);
 				
+				if(curl_errno($curl))
+				{   
+					throw new Thrush_CurlException($curl, $data);
+				}
+				
 				$responseCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 				
 				if($responseCode === 200)
@@ -731,7 +736,7 @@
 				}
 				else
 				{
-					throw new Thrush_CurlException($curl, $data);
+					throw new Thrush_CurlHttpException($curl, $data);
 				}
 			}
 			else
