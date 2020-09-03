@@ -78,19 +78,22 @@
 
 
 		// augmented Backus–Naur form (ABNF):
-		// <variable> = <variableName> ["|" <function>]*
+		// <variable> = <variableName> / <string> / <constant> ["|" <function>]*
 		// <function> = <functionName> "(" [<functionArgument> ","]* ")"
-		// <functionArgument> = <variableName> / <argument>
-		// <variableName> = 1*[<blockname> "."] <key>
-		// <blockname> = [a-z0-9_]+
+		// <functionName> = [a-zA-Z_]{1} [a-zA-Z0-9_]*
+		// <functionArgument> = <variable>
+		// <variableName> = 1*[<blockName> "."] <key>
+		// <blockName> = [a-z0-9_]+
 		// <condition> = <freeContent>
 		// <key> = [A-Z0-9_]+
+		// <string> = "\"" [.*?] "\""
+		// <constant> = "true" / "TRUE" / "false" / "FALSE" / "null" / "NULL"
 		// <freeContent> = [.*?] ; Free content
 		
-		// <begin> = "<!-- BEGIN " <blockname> *1[" ORDER " <key>] " -->"
+		// <begin> = "<!-- BEGIN " <blockName> *1[" ORDER " <key>] " -->"
 		// <end> = "<!-- END " *1[<freeContent> " "] "-->"
 		// <if> = "<!-- IF " <condition> " -->"
-		// <isset> = "<!-- ISSET " <blockname> / <key> " -->"
+		// <isset> = "<!-- ISSET " <blockName> / <key> " -->"
 		// <else> = "<!-- ELSE " *1[<freeContent> " "] "-->"
 		// <endif> = "<!-- ENDIF " *1[<freeContent> " "] "-->"
 		// <endisset> = "<!-- ENDISSET " *1[<freeContent> " "] "-->"
@@ -240,8 +243,8 @@
 			if($nb === -1)
 				$nb = PHP_INT_MAX-1;
 			
-			/*if($key == '}')
-				echo '<hr />'.$str.' selon '.$key.' avec nb='.$nb;*/
+			//if($key == ',')
+			//	echo str_replace('<', '&lt;', mb_substr($str, 0, 50)).' selon '.$key.' avec nb='.$nb.'<br />';
 			
 			// On calcule la taille de la chaîne pour éviter de dépasser la fin
 			$length = mb_strlen($str);
@@ -292,8 +295,11 @@
 			if($length > 0)
 				$ret[] = $str;
 			
-			/*if($key == '|')
-				var_dump($ret);*/
+			//if($key == ',')
+			//	foreach($ret as $r)
+			//	{
+			//		echo str_replace('<', '&lt;', mb_substr($r, 0, 50)).'<br />';
+			//	}
 				
 			return $ret;
 		}
@@ -1152,16 +1158,16 @@
 			if($functionParameters != '')
 			{
 				$functionParameters = $this->explodeConsideringPunctuation(',', $functionParameters);
-				array_map("trim", $functionParameters);
-				foreach($functionParameters as $cle => $parametre)
+				$functionParameters = array_map("trim", $functionParameters);
+				foreach($functionParameters as $cle => $parameter)
 				{
-					if($parametre === 'this')
+					if($parameter === 'this')
 					{
 						$functionParameters[$cle] = $var;
 						$varAdded = true;
 					}
 					else
-						$functionParameters[$cle] = $this->compileVariable($parametre);
+						$functionParameters[$cle] = $this->compileVariable($parameter, true);
 				}
 			}
 			else
@@ -1276,11 +1282,11 @@
 		protected function compileVariable(string $variable, bool $addIsset=false)
 		{
 			$str = '';
+			
 			$blocs = $this->explodeConsideringPunctuation('|', $variable);
+			$blocs = array_map("trim", $blocs);
 			$variableBrut = array_shift($blocs);
-			
 			$variable = $this->compileVariableNameOrFunctionArgument($variableBrut);
-			
 			$str = $variable;
 			
 			if(!empty($blocs))
