@@ -90,7 +90,7 @@
 			);
 		}
 		
-		protected function cacheCallback(string &$data, string $testString)
+		public function cacheCallback(string &$data, string $testString)
 		{
 			$data = $testString;
 		}
