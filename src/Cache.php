@@ -591,6 +591,12 @@
 		* Fetch data from a given URL, either from Web or cache.
 		* If the data is already in cache and cache has not expired, load data from cache.
 		* If this cache type is disabled, \c life attribute is ignored.
+		*
+		* If a callback is provided, it will be called if data is loaded from URL and before saving. 
+		* First item of the array shall be a callable PHP object, other items are optional to define callback arguments.
+		* This array will be used as callback parameters, given that first item (callable object) will be replaced by a reference to the data.
+		* Example 1: array('queryCallback', $var1, $var2) will call queryCallback(&$data, $var1, $var2)
+		* Example 2: array(array($this, 'queryCallback'), $var1, $var2) will call $this->queryCallback(&$data, $var1, $var2)
 		* 
 		* \param string $type
 		*   Name of the cache to use
@@ -604,6 +610,8 @@
 		*   Cache life in seconds
 		* \param string $pwd
 		*   Password to encrypt data, if required
+		* \param array $callback
+		*   Optional array made of a callback and arguments to modify/analyse data before saving to cache
 		* 
 		* \return string
 		*   Data
@@ -615,7 +623,7 @@
 		* \throws Thrush_Cache_NoDataToLoadException If data shall be retrieved from cache but are not available.
 		* \throws Thrush_HTTPException If HTTP code different from 200
 		*/
-		public function loadURLFromWebOrCache(string $type, string $url, array $postData=null, string $key=null, $life=self::LIFE_IMMORTAL, string $pwd='')
+		public function loadURLFromWebOrCache(string $type, string $url, array $postData=null, string $key=null, $life=self::LIFE_IMMORTAL, string $pwd='', array $callback=null)
 		{
 			if(is_null($key))
 			{
@@ -721,6 +729,15 @@
 				
 				if($responseCode === 200)
 				{
+					// If a callback has been defined to modify data without saving, we call it.
+					// First argument will be replaced by a reference to the data to modify/analyse.
+					if(!is_null($callback))
+					{
+						$args = $callback;
+						$args[0] =& $data;
+						call_user_func_array($callback[0], $args);
+					}
+					
 					// Save data only if requested
 					if($this->isEnabled($type))
 					{
