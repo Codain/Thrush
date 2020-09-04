@@ -11,7 +11,7 @@ php:
   - 7.0
 
 before_install:
-  - sudo apt-get -y install git zip php7-cli php7-curl
+  - sudo apt-get -y install git zip php7.0-cli php7.0-curl
 
 before_script:
   - ./tests/before_script.sh
