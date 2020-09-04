@@ -112,9 +112,16 @@
 			
 			$cache->enable($type);
 			
-			$this->expectException(Thrush_CurlHttpException::class);
-			
+			//$this->expectException(Thrush_CurlHttpException::class);
+			try
+			{
 			$cache->loadURLFromWebOrCache($type, 'https://httpstat.us/404', null, '404', Thrush_Cache::LIFE_IMMORTAL, '');
+			}
+			catch(Throwable $e)
+			{
+				echo 'Exception!<br />';
+				echo '<pre>'.Thrush_Exception::formatToString($e).'</pre><br />';
+			}
 		}
 		
 		public function testHttpError500()
