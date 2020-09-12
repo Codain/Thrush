@@ -46,6 +46,7 @@
 	class Thrush_Cache
 	{
 		const LIFE_IMMORTAL = -1;
+		const LIFE_HOUR = 3600;
 		const LIFE_DAY = 86400;
 		const LIFE_WEEK = 604800;
 		const LIFE_BIWEEK = 1296000;
