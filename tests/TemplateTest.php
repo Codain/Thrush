@@ -8,6 +8,11 @@
 
 	final class Thrush_TemplateTest extends TestCase
 	{
+		protected function cleanOutput(string $output)
+		{
+			return preg_replace('!\s+!', ' ', $output);
+		}
+		
 		public function testCreate()
 		{
 			$template = new Thrush_Template(__DIR__.'/ressources/templates');
@@ -90,6 +95,8 @@
 			
 			$res = $template->render('body', false);
 			
+			$res = $this->cleanOutput($res);
+			
 			$this->assertEquals(
 				$res,
 				'Hello (3 0) (2 1) (1 2) (0 3) !'
@@ -115,6 +122,8 @@
 			}
 			
 			$res = $template->render('body', false);
+			
+			$res = $this->cleanOutput($res);
 			
 			$this->assertEquals(
 				$res,
