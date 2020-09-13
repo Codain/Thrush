@@ -10,12 +10,12 @@
 	{
 		public function testCreate()
 		{
-			$template = new Thrush_Template('./ressources/templates');
+			$template = new Thrush_Template(__DIR__.'/ressources/templates');
 		}
 		
 		public function testBasicVariable()
 		{
-			$template = new Thrush_Template('./ressources/templates');
+			$template = new Thrush_Template(__DIR__.'/ressources/templates');
 			
 			$template->setContentForHandle('body', 'Hello {WORLD}!');
 			$template->setRootVariable('WORLD', 'World');
@@ -29,7 +29,7 @@
 		
 		public function testVariableWithBasicFunction()
 		{
-			$template = new Thrush_Template('./ressources/templates');
+			$template = new Thrush_Template(__DIR__.'/ressources/templates');
 			
 			$template->setContentForHandle('body', 'Hello {WORLD|strtoupper()}!');
 			$template->setRootVariable('WORLD', 'World');
@@ -43,7 +43,7 @@
 		
 		public function testVariableWithComplexFunctions()
 		{
-			$template = new Thrush_Template('./ressources/templates');
+			$template = new Thrush_Template(__DIR__.'/ressources/templates');
 			
 			$template->setContentForHandle('body', '{ONE}+2={ONE|add(2)} and {TWO}+3={TWO|add(3)}');
 			$template->setRootVariable('ONE', 1);
@@ -58,7 +58,7 @@
 		
 		public function testVariableWithPipelinedFunctions()
 		{
-			$template = new Thrush_Template('./ressources/templates');
+			$template = new Thrush_Template(__DIR__.'/ressources/templates');
 			
 			$template->setContentForHandle('body', 'Hello {WORLD|strtoupper()|substr(0, 3)}!');
 			$template->setRootVariable('WORLD', 'World');
@@ -72,7 +72,7 @@
 		
 		public function testBlockWithBasicVariable()
 		{
-			$template = new Thrush_Template('./ressources/templates');
+			$template = new Thrush_Template(__DIR__.'/ressources/templates');
 			
 			$template->setContentForHandle('body', 'Hello 
 				<!-- BEGIN block -->
@@ -98,7 +98,7 @@
 		
 		public function testBlockWithOrder()
 		{
-			$template = new Thrush_Template('./ressources/templates');
+			$template = new Thrush_Template(__DIR__.'/ressources/templates');
 			
 			$template->setContentForHandle('body', 'Hello 
 				<!-- BEGIN block ORDER VAR1 ASC -->
