@@ -769,8 +769,13 @@
 			if($fullFilename === '')
 				throw new Thrush_Exception('Error', 'File "'.$filename.'" does not exists in any loaded themes.');
 			
-			// Associate the file with the handle
+			// Associate the file with the handle and clearing previously built data
+			// To do: Unset only if $fullfilename has changed
 			$this->files[$handle] = array($fullFilename, $cacheKey, $cacheDuration);
+			if(array_key_exists($handle, $this->uncompiledCode))
+				unset($this->uncompiledCode[$handle]);
+			if(array_key_exists($handle, $this->compiledCode))
+				unset($this->compiledCode[$handle]);
 		}
 		
 		
