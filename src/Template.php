@@ -65,14 +65,9 @@
 		protected $themeStack = array();
 		
 		/**
-		* array Set of compiled content for each handle
+		* array Set of handle data
 		*/
-		protected $compiledCode = array();
-
-		/**
-		* array Set of uncompiled content for each handle
-		*/
-		protected $uncompiledCode = array();
+		protected $handles = array();
 
 
 
@@ -109,9 +104,6 @@
 		protected $templateDataPointer = array();
 		protected $templateDataPointerI = 0;
 
-		// Hash of filenames for each template handle.
-		var $files = array();
-		
 		var $template_suffixe = '';
 		
 		var $block_nesting_level = 0;
@@ -186,8 +178,7 @@
 		{
 			$this->resetData();
 			
-			$this->compiled_code = array();
-			$this->uncompiled_code = array();
+			$this->handles = array();
 			
 			$this->setCurrentTheme('default');
 		}
@@ -433,27 +424,28 @@
 			
 			$this->loadFileForHandle($handle);
 			
-			// Si le code n'a pas déjà été compilé : on le compile
-			if(!isset($this->compiledCode[$handle]) || empty($this->compiledCode[$handle]))
+			// If code has not been already compiled, we compile it
+			if($this->handles[$handle]['compiled'] === false)
 			{
 				// Compile it, with the "no echo statements" option on.
-				$this->compiledCode[$handle] = $this->compile($this->uncompiledCode[$handle], '$_str');
-				unset($this->uncompiledCode[$handle]);
+				$this->handles[$handle]['code'] = $this->compile($this->handles[$handle]['code'], '$_str');
+				$this->handles[$handle]['compiled'] = true;
+				
 				if(!is_null($this->cache) && $this->cache->isEnabled('template'))
 				{
-					$this->cache->save('template', $this->getCacheKey($this->files[$handle][Thrush_Template::FILE_FILENAME]), $this->compiledCode[$handle]);
+					$this->cache->save('template', $this->getCacheKey($this->handles[$handle]['filename'][Thrush_Template::FILE_FILENAME]), $this->handles[$handle]['code']);
 				}
 			}
 			
-			// On l'éxecute
+			// We evaluate it
 			//if(estDeveloppeur())
-			//	printLines($this->compiledCode[$handle]);
-			eval($this->compiledCode[$handle]);
+			//	printLines($this->handles[$handle]['code']);
+			eval($this->handles[$handle]['code']);
 			
-			// Si on doit sauvegarder le résultat executé
-			if($this->files[$handle][Thrush_Template::FILE_CACHE_KEY] != '' && !is_null($this->cache) && !$this->cache->exists('html', $this->files[$handle][Thrush_Template::FILE_CACHE_KEY], $this->files[$handle][Thrush_Template::FILE_CACHE_DURATION]))
+			// Save result if we are configured to do it
+			if($this->handles[$handle]['filename'][Thrush_Template::FILE_CACHE_KEY] != '' && !is_null($this->cache) && !$this->cache->exists('html', $this->handles[$handle]['filename'][Thrush_Template::FILE_CACHE_KEY], $this->handles[$handle]['filename'][Thrush_Template::FILE_CACHE_DURATION]))
 			{
-				$this->cache->save('html', $this->files[$handle][Thrush_Template::FILE_CACHE_KEY], $_str);
+				$this->cache->save('html', $this->handles[$handle]['filename'][Thrush_Template::FILE_CACHE_KEY], $_str);
 			}
 			
 			// assign the value of the generated variable to the given key.
@@ -771,16 +763,22 @@
 			
 			// Associate the file with the handle and clearing previously built data
 			// To do: Unset only if $fullfilename has changed
-			$this->files[$handle] = array($fullFilename, $cacheKey, $cacheDuration);
-			if(array_key_exists($handle, $this->uncompiledCode))
-				unset($this->uncompiledCode[$handle]);
-			if(array_key_exists($handle, $this->compiledCode))
-				unset($this->compiledCode[$handle]);
+			$this->initializeHandle($handle);
+			$this->handles[$handle]['filename'] = array($fullFilename, $cacheKey, $cacheDuration);
 		}
 		
 		
 		
 		
+		
+		protected function initializeHandle(string $handle)
+		{
+			$this->handles[$handle] = array(
+				'filename' => null,
+				'code' => null,
+				'compiled' => null
+				);
+		}
 		
 		/**
 		* Sets the content for a single handle. Content will be compiled.
@@ -792,9 +790,13 @@
 		*/
 		public function setContentForHandle(string $handle, string $content)
 		{
-			$this->uncompiledCode[$handle] = $content;
+			if(!array_key_exists($handle, $this->handles))
+			{
+				$this->initializeHandle($handle);
+			}
 			
-			$this->compiledCode[$handle] = $this->compile($this->uncompiledCode[$handle], '$_str');
+			$this->handles[$handle]['code'] = $this->compile($content, '$_str');
+			$this->handles[$handle]['compiled'] = true;
 		}
 		
 		
@@ -812,39 +814,47 @@
 		*/
 		protected function loadFileForHandle(string $handle)
 		{
-			if(isset($this->uncompiledCode[$handle]) || isset($this->compiledCode[$handle]))
+			if(!isset($this->handles[$handle]))
+			{
+				throw new Thrush_Exception('Error', 'No handle "'.$handle.'" defined.');
+			}
+			
+			if(is_null($this->handles[$handle]['filename']))
+			{
+				throw new Thrush_Exception('Error', 'No file set for handle "'.$handle.'".');
+			}
+			
+			if(!is_null($this->handles[$handle]['code']))
 			{
 				// Do nothing
 			}
 			else
 			{
-				if(!isset($this->files[$handle]))
-				{
-					throw new Thrush_Exception('Error', 'No file set for handle "'.$handle.'".');
-				}
-
 				// Take from Cache if possible
-				if($this->files[$handle][Thrush_Template::FILE_CACHE_KEY] != '' && !is_null($this->cache) && $this->cache->isEnabled('html') && $this->cache->exists('html', $this->files[$handle][Thrush_Template::FILE_CACHE_KEY], $this->files[$handle][Thrush_Template::FILE_CACHE_DURATION]))
+				if($this->handles[$handle]['filename'][Thrush_Template::FILE_CACHE_KEY] != '' && !is_null($this->cache) && $this->cache->isEnabled('html') && $this->cache->exists('html', $this->handles[$handle]['filename'][Thrush_Template::FILE_CACHE_KEY], $this->handles[$handle]['filename'][Thrush_Template::FILE_CACHE_DURATION]))
 				{
-					$this->compiledCode[$handle] = '$_str = \''.str_replace("'", "\'", $this->cache->load('html', $this->files[$handle][Thrush_Template::FILE_CACHE_KEY])).'\';';
+					$this->handles[$handle]['code'] = '$_str = \''.str_replace("'", "\'", $this->cache->load('html', $this->handles[$handle]['filename'][Thrush_Template::FILE_CACHE_KEY])).'\';';
+					$this->handles[$handle]['compiled'] = true;
 				}
 				else
 				{
-					$cle = $this->getCacheKey($this->files[$handle][Thrush_Template::FILE_FILENAME]);
+					$cle = $this->getCacheKey($this->handles[$handle]['filename'][Thrush_Template::FILE_FILENAME]);
 					if(!is_null($this->cache) && $this->cache->isEnabled('template') && $this->cache->exists('template', $cle))
 					{
-						$this->compiledCode[$handle] = $this->cache->load('template', $cle);
+						$this->handles[$handle]['code'] = $this->cache->load('template', $cle);
+						$this->handles[$handle]['compiled'] = true;
 					}
 					else
 					{
-						if(file_exists($this->files[$handle][Thrush_Template::FILE_FILENAME]))
+						if(file_exists($this->handles[$handle]['filename'][Thrush_Template::FILE_FILENAME]))
 						{
-							$str = file_get_contents($this->files[$handle][Thrush_Template::FILE_FILENAME]);
+							$str = file_get_contents($this->handles[$handle]['filename'][Thrush_Template::FILE_FILENAME]);
 						}
 						else
-							throw new Thrush_Exception('Error', 'File "'.$this->files[$handle][Thrush_Template::FILE_FILENAME].'" not found.');
+							throw new Thrush_Exception('Error', 'File "'.$this->handles[$handle]['filename'][Thrush_Template::FILE_FILENAME].'" not found.');
 						
-						$this->uncompiledCode[$handle] = $str;
+						$this->handles[$handle]['code'] = $str;
+						$this->handles[$handle]['compiled'] = false;
 					}
 				}
 			}
@@ -1338,21 +1348,30 @@
 		*/
 		public function render(string $handle, bool $echo=false)
 		{
+			if(!array_key_exists($handle, $this->handles))
+			{
+				throw new Thrush_Exception('Error', 'Handle "'.$handle.'" not defined');
+			}
+			
 			$this->loadFileForHandle($handle);
 			
-			// If the code was not compiled: we compile it
-			if(!isset($this->compiledCode[$handle]) || empty($this->compiledCode[$handle]))
+			// If the code was not compiled: We compile it
+			if($this->handles[$handle]['compiled'] === false)
 			{
-				$this->compiledCode[$handle] = $this->compile($this->uncompiledCode[$handle], '$_str');
-				unset($this->uncompiledCode[$handle]);
-				if(!is_null($this->cache) && $this->cache->isEnabled('template'))
-					$this->cache->save('template', $this->getCacheKey($this->files[$handle][Thrush_Template::FILE_FILENAME]), $this->compiledCode[$handle]);
+				$this->handles[$handle]['code'] = $this->compile($this->handles[$handle]['code'], '$_str');
+				$this->handles[$handle]['compiled'] = true;
+				
+				// If we are supposed to store compiled code in cache, let's do it
+				if(!is_null($this->handles[$handle]['filename']) && !is_null($this->cache) && $this->cache->isEnabled('template'))
+				{
+					$this->cache->save('template', $this->getCacheKey($this->handles[$handle]['filename'][Thrush_Template::FILE_FILENAME]), $this->handles[$handle]['code']);
+				}
 			}
 			
 			// Run the compiled code.
 			//if(estDeveloppeur())
-				//printLines($this->compiledCode[$handle]);
-			eval($this->compiledCode[$handle]); 
+				//printLines($this->handles[$handle]['code']);
+			eval($this->handles[$handle]['code']); 
 			
 			// If we were required to echo rather than returning result, let's do it
 			if($echo)
