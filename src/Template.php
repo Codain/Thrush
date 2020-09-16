@@ -368,6 +368,23 @@
 			array_shift($this->themeStack);
 		}
 		
+		/**
+		* Return current theme from the stack.
+		*
+		* \return string
+		*   Current theme
+		*
+		* \throws Thrush_Exception If theme stack is empty (i.e. no theme defined)
+		*/
+		public function getCurrentTheme()
+		{
+			if(empty($this->themeStack))
+			{
+				throw new Thrush_Exception('Error', 'Not theme as been defined');
+			}
+			
+			return $this->themeStack[0];
+		}
 		
 		
 		

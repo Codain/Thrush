@@ -18,6 +18,36 @@
 			$template = new Thrush_Template(__DIR__.'/ressources/templates');
 		}
 		
+		public function testCurrentTheme()
+		{
+			$template = new Thrush_Template(__DIR__.'/ressources/templates');
+			
+			$ct = $template->getCurrentTheme();
+			$this->assertEquals(
+				$ct,
+				'default'
+			);
+			
+			$template->pushCurrentTheme('blank');
+			$ct = $template->getCurrentTheme();
+			$this->assertEquals(
+				$ct,
+				'blank'
+			);
+			
+			$template->popCurrentTheme();
+			$ct = $template->getCurrentTheme();
+			$this->assertEquals(
+				$ct,
+				'default'
+			);
+			
+			$this->expectException(Thrush_Exception::class);
+			
+			$template->popCurrentTheme();
+			$ct = $template->getCurrentTheme();
+		}
+		
 		public function testBasicVariable()
 		{
 			$template = new Thrush_Template(__DIR__.'/ressources/templates');
