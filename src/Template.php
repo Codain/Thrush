@@ -768,6 +768,8 @@
 			// To do: Unset only if $fullfilename has changed
 			$this->initializeHandle($handle);
 			$this->handles[$handle]['filename'] = array($fullFilename, $cacheKey, $cacheDuration);
+			
+			$this->loadFileForHandle($handle);
 		}
 		
 		
@@ -1356,7 +1358,10 @@
 				throw new Thrush_Exception('Error', 'Handle "'.$handle.'" not defined');
 			}
 			
-			$this->loadFileForHandle($handle);
+			if(is_null($this->handles[$handle]['code']))
+			{
+				throw new Thrush_Exception('Error', 'No code defined for handle "'.$handle.'"');
+			}
 			
 			// If the code was not compiled: We compile it
 			if($this->handles[$handle]['compiled'] === false)
