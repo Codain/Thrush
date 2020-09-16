@@ -299,7 +299,7 @@
 		
 		
 		/**
-		* Set current theme for this template.
+		* Clear current theme stack and push a theme in the stack.
 		* Throws Thrush_Exception if classe.php file does not exists in this 
 		* theme.
 		*
@@ -310,26 +310,12 @@
 		*/
 		public function setCurrentTheme(string $theme)
 		{
-			$this->themeStack = array($theme);
-			
-			if(!array_key_exists($theme, $this->themesLoaded))
-			{
-				$c = $this->themesDir.$theme.'/classe.php';
-				if(file_exists($c))
-				{
-					require_once $c;
-					
-					$class = 'Theme'.ucfirst($theme);
-					
-					$this->themesLoaded[$theme] = new $class();
-				}
-				else
-					throw new Thrush_Exception('Error', 'File "'.$c.'" cannot be found.');
-			}
+			$this->themeStack = array();
+			$this->pushCurrentTheme($theme);
 		}
 		
 		/**
-		* Push current theme in the stack for this template.
+		* Push current theme in the stack.
 		* Throws Thrush_Exception if classe.php file does not exists in this 
 		* theme.
 		*
