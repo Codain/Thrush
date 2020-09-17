@@ -922,6 +922,7 @@
 						
 						$this->assertBlockNameValidity($name, $matches[0][0]);
 						
+						// Here we extract ordering and filtering attributes
 						$orderBy = '';
 						$orderOrder = '';
 						$filterBy = '';
@@ -933,14 +934,26 @@
 							{
 								$orderBy = array_shift($param);
 								
-								if(!empty($param) && ($param[0] === 'DSC' || $param[0] === 'ASC'))
-									$orderOrder = array_shift($param);
-								else
+								if(empty($param))
+								{
 									$orderOrder = 'ASC';
+								}
+								elseif($param[0] === 'DSC' || $param[0] === 'DESC' || $param[0] === 'ASC')
+								{
+									$orderOrder = array_shift($param);
+								}
+								else
+								{
+									throw new Thrush_Exception('Error', 'Block ordering "'.$param[0].'" not recognized. ASC, DESC or nothing expected');
+								}
 							}
-							else if ($p === 'FILTER')
+							elseif($p === 'FILTER')
 							{
 								$filterBy = array_shift($param);
+							}
+							else
+							{
+								throw new Thrush_Exception('Error', 'Block attribute "'.$p.'" not recognized. FILTER, ORDER or nothing expected');
 							}
 						}
 						
@@ -950,19 +963,23 @@
 						$ret .= $format[1]."\n"
 							."\n";
 						
+						// If we are requested to order the data, let's do it
 						if($orderBy !== '')
 						{
 							$f = 'order_'.$orderBy.'_'.$orderOrder;
 							
-							if($orderOrder === 'ASC' && !array_key_exists($f, $createdFunctions))
+							if(!array_key_exists($f, $createdFunctions))
 							{
-								$createdFunctions[$f] = 'function '.$f.'($a, $b) { if ($a["'.$orderBy.'"] == $b["'.$orderBy.'"]) { return 0; } return ($a["'.$orderBy.'"] < $b["'.$orderBy.'"]) ? -1 : 1; }'."\n"
-									."\n";
-							}
-							elseif($orderOrder === 'DSC' && !array_key_exists($f, $createdFunctions))
-							{
-								$createdFunctions[$f] = 'function '.$f.'($a, $b) { if ($a["'.$orderBy.'"] == $b["'.$orderBy.'"]) { return 0; } return ($a["'.$orderBy.'"] > $b["'.$orderBy.'"]) ? -1 : 1; }'."\n"
-									."\n";
+								if($orderOrder === 'ASC')
+								{
+									$createdFunctions[$f] = 'function '.$f.'($a, $b) { if ($a["'.$orderBy.'"] == $b["'.$orderBy.'"]) { return 0; } return ($a["'.$orderBy.'"] < $b["'.$orderBy.'"]) ? -1 : 1; }'."\n"
+										."\n";
+								}
+								elseif($orderOrder === 'DSC' || $orderOrder === 'DESC')
+								{
+									$createdFunctions[$f] = 'function '.$f.'($a, $b) { if ($a["'.$orderBy.'"] == $b["'.$orderBy.'"]) { return 0; } return ($a["'.$orderBy.'"] > $b["'.$orderBy.'"]) ? -1 : 1; }'."\n"
+										."\n";
+								}
 							}
 						}
 						
@@ -972,6 +989,7 @@
 						$indentationLevel++;
 						$indentation = str_repeat("\t", $indentationLevel);
 						
+						// If we are requested to order the data, we apply a callback
 						if($orderBy !== '')
 						{
 							$ret .= $indentation.'usort('.$varref.', "order_'.$orderBy.'_'.$orderOrder.'");'."\n"

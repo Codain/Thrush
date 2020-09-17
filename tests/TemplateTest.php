@@ -133,7 +133,7 @@
 			);
 		}
 		
-		public function testBlockWithOrder()
+		public function testBlockWithOrderAsc()
 		{
 			$template = new Thrush_Template(__DIR__.'/ressources/templates');
 			
@@ -159,6 +159,47 @@
 				$res,
 				'Hello (0 3) (1 2) (2 1) (3 0) !'
 			);
+		}
+		
+		public function testBlockWithOrderDesc()
+		{
+			$template = new Thrush_Template(__DIR__.'/ressources/templates');
+			
+			$template->setContentForHandle('body', 'Hello 
+				<!-- BEGIN block ORDER VAR2 DESC -->
+				({block.VAR1} {block.VAR2}) 
+				<!-- END block -->
+				!');
+			
+			for($i=3; $i>=0; $i--)
+			{
+				$template->setNewBlockVariables('block', array(
+					'VAR1' => $i,
+					'VAR2' => 3-$i
+					));
+			}
+			
+			$res = $template->render('body', false);
+			
+			$res = $this->cleanOutput($res);
+			
+			$this->assertEquals(
+				$res,
+				'Hello (0 3) (1 2) (2 1) (3 0) !'
+			);
+		}
+		
+		public function testBlockWithOrderFailure()
+		{
+			$template = new Thrush_Template(__DIR__.'/ressources/templates');
+			
+			$this->expectException(Thrush_Exception::class);
+			
+			$template->setContentForHandle('body', 'Hello 
+				<!-- BEGIN block ORDER VAR2 IDONTKNOW -->
+				({block.VAR1} {block.VAR2}) 
+				<!-- END block -->
+				!');
 		}
 	}
 ?>
