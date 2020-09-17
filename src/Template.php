@@ -106,8 +106,6 @@
 
 		var $template_suffixe = '';
 		
-		var $block_nesting_level = 0;
-		
 		/**
 		* Constructor. Simply sets the root dir.
 		*
@@ -886,11 +884,13 @@
 			$offset = 0;
 			$block_names = Array();
 			$createdFunctions = array();
+			$indentationLevel = 0;
+			$indentation = '';
 			
 			$format = array('echo \'', '\';');
 			$ret = $format[0];
 			
-			if($retvar != '')
+			if($retvar !== '')
 			{
 				$format = array($retvar.' .= \'', '\';');
 				$ret = $retvar.' = \'';
@@ -950,46 +950,51 @@
 						$ret .= $format[1]."\n"
 							."\n";
 						
-						if($orderBy != '')
+						if($orderBy !== '')
 						{
 							$f = 'order_'.$orderBy.'_'.$orderOrder;
 							
-							if($orderOrder == 'ASC' && !array_key_exists($f, $createdFunctions))
+							if($orderOrder === 'ASC' && !array_key_exists($f, $createdFunctions))
 							{
 								$createdFunctions[$f] = 'function '.$f.'($a, $b) { if ($a["'.$orderBy.'"] == $b["'.$orderBy.'"]) { return 0; } return ($a["'.$orderBy.'"] < $b["'.$orderBy.'"]) ? -1 : 1; }'."\n"
 									."\n";
 							}
-							elseif($orderOrder == 'DSC' && !array_key_exists($f, $createdFunctions))
+							elseif($orderOrder === 'DSC' && !array_key_exists($f, $createdFunctions))
 							{
 								$createdFunctions[$f] = 'function '.$f.'($a, $b) { if ($a["'.$orderBy.'"] == $b["'.$orderBy.'"]) { return 0; } return ($a["'.$orderBy.'"] > $b["'.$orderBy.'"]) ? -1 : 1; }'."\n"
 									."\n";
 							}
 						}
 						
-						if($filterBy != '')
-						{
-							$filterBy = 'if (!('.$this->compileCondition($filterBy, $block_names).')) continue;';
-						}
+						$ret .= $indentation.'if(isset('.$varref.'))'."\n"
+							.$indentation.'{'."\n";
 						
-						$ret .= str_repeat("\t", $this->block_nesting_level).'if(isset('.$varref.'))'."\n"
-							.str_repeat("\t", $this->block_nesting_level).'{'."\n";
+						$indentationLevel++;
+						$indentation = str_repeat("\t", $indentationLevel);
 						
-						if($orderBy != '')
+						if($orderBy !== '')
 						{
-							$ret .= str_repeat("\t", $this->block_nesting_level+1).'usort('.$varref.', "order_'.$orderBy.'_'.$orderOrder.'");'."\n"
+							$ret .= $indentation.'usort('.$varref.', "order_'.$orderBy.'_'.$orderOrder.'");'."\n"
 								."\n";
 						}
 						
-						$ret .= str_repeat("\t", $this->block_nesting_level+1).'$_'.$name.'_count = count('.$varref.');'."\n"
-							.str_repeat("\t", $this->block_nesting_level+1).'for($_'.$name.'_i = 0; $_'.$name.'_i < $_'.$name.'_count; ++$_'.$name.'_i)'."\n"
-							.str_repeat("\t", $this->block_nesting_level+1).'{'."\n"
-							.str_repeat("\t", $this->block_nesting_level+2).''.$filterBy.''."\n"
-							.str_repeat("\t", $this->block_nesting_level+2).''.$this->getPhpStringForBlockKey($block_names, "_ROW").' = $_'.$name.'_i;'."\n"
-							//.str_repeat("\t", $this->block_nesting_level+2).'$this->templateDataPointerI++;'."\n"
-							//.str_repeat("\t", $this->block_nesting_level+2).'$this->templateDataPointer[$this->templateDataPointerI] =& '.$this->getPhpStringForBlockKey($block_names, '').';'."\n"
-							.str_repeat("\t", $this->block_nesting_level+2).$format[0];
+						$ret .= $indentation.'$_'.$name.'_count = count('.$varref.');'."\n"
+							.$indentation.'for($_'.$name.'_i = 0; $_'.$name.'_i < $_'.$name.'_count; ++$_'.$name.'_i)'."\n"
+							.$indentation.'{'."\n";
 						
-						$this->block_nesting_level += 2;
+						$indentationLevel++;
+						$indentation = str_repeat("\t", $indentationLevel);
+						
+						if($filterBy !== '')
+						{
+							$ret .= $indentation.'if (!('.$this->compileCondition($filterBy, $block_names).')) continue;'."\n";
+						}
+						
+						$ret .= $indentation.''.$this->getPhpStringForBlockKey($block_names, "_ROW").' = $_'.$name.'_i;'."\n"
+							//.$indentation.'$this->templateDataPointerI++;'."\n"
+							//.$indentation.'$this->templateDataPointer[$this->templateDataPointerI] =& '.$this->getPhpStringForBlockKey($block_names, '').';'."\n"
+							.$indentation.$format[0];
+						
 						$offset += strlen($matches[0][0]);
 					}
 					elseif(preg_match('#^<!--\sEND (.*?)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
@@ -997,14 +1002,21 @@
 						//var_dump($matches);
 						
 						array_pop($block_names);
-						$this->block_nesting_level -= 2;
 						
 						$ret .= $format[1]."\n"
-							//.str_repeat("\t", $this->block_nesting_level+2).'$this->templateDataPointerI--;'."\n"
-							.str_repeat("\t", $this->block_nesting_level+1).'}'."\n"
-							.str_repeat("\t", $this->block_nesting_level).'}'."\n"
-							.str_repeat("\t", $this->block_nesting_level).$format[0];
+							//.$indentation.'$this->templateDataPointerI--;'."\n"
+							;
+							
+						$indentationLevel--;
+						$indentation = str_repeat("\t", $indentationLevel);
 						
+						$ret .= $indentation.'}'."\n";
+						
+						$indentationLevel--;
+						$indentation = str_repeat("\t", $indentationLevel);
+						
+						$ret .= $indentation.'}'."\n"
+							.$indentation.$format[0];
 						
 						$offset += strlen($matches[0][0]);
 					}
@@ -1020,32 +1032,45 @@
 							
 							$varref = $this->getPhpStringForBlockKey($block_names, '');
 							
+							$indentationLevel--;
+							$indentation = str_repeat("\t", $indentationLevel);
+							
 							// Transformation de la balise
 							$ret .= $format[1]."\n"
 								."\n"
-								.str_repeat("\t", $this->block_nesting_level-1).'if(array_key_exists("'.$name.'", '.$varref.'))'."\n"
-								.str_repeat("\t", $this->block_nesting_level-1).'{'."\n";
+								.$indentation.'if(array_key_exists("'.$name.'", '.$varref.'))'."\n"
+								.$indentation.'{'."\n";
 							
-							$ret .= str_repeat("\t", $this->block_nesting_level).$format[0];
+							$indentationLevel++;
+							$indentation = str_repeat("\t", $indentationLevel);
+							
+							$ret .= $indentation.$format[0];
 						}
 						else
 						{
 							$this->assertBlockNameValidity($name, $matches[0][0]);
 							
 							array_push($block_names, $name);
-							$this->block_nesting_level++;
+							$indentationLevel++;
+							$indentation = str_repeat("\t", $indentationLevel);
+							
 							$varref = $this->getPhpStringForBlockKey($block_names, null);
+							
+							$indentationLevel--;
+							$indentation = str_repeat("\t", $indentationLevel);
 							
 							// Transformation de la balise
 							$ret .= $format[1]."\n"
 								."\n"
-								.str_repeat("\t", $this->block_nesting_level-1).'if(isset('.$varref.'))'."\n"
-								.str_repeat("\t", $this->block_nesting_level-1).'{'."\n";
+								.$indentation.'if(isset('.$varref.'))'."\n"
+								.$indentation.'{'."\n";
 							
-							$ret .= str_repeat("\t", $this->block_nesting_level).$format[0];
+							$indentationLevel++;
+							$indentation = str_repeat("\t", $indentationLevel);
+							
+							$ret .= $indentation.$format[0];
 							
 							array_pop($block_names);
-							$this->block_nesting_level--;
 						}
 						
 						$offset += strlen($matches[0][0]);
@@ -1055,10 +1080,10 @@
 						//var_dump($matches);
 						
 						$ret .= $format[1]."\n"
-							.str_repeat("\t", $this->block_nesting_level).'}'."\n"
-							.str_repeat("\t", $this->block_nesting_level).'else'."\n"
-							.str_repeat("\t", $this->block_nesting_level).'{'."\n"
-							.str_repeat("\t", $this->block_nesting_level).$format[0];
+							.$indentation.'}'."\n"
+							.$indentation.'else'."\n"
+							.$indentation.'{'."\n"
+							.$indentation.$format[0];
 						
 						$offset += strlen($matches[0][0]);
 					}
@@ -1067,8 +1092,8 @@
 						//var_dump($matches);
 						
 						$ret .= $format[1]."\n"
-							.str_repeat("\t", $this->block_nesting_level).'}'."\n"
-							.str_repeat("\t", $this->block_nesting_level).$format[0];
+							.$indentation.'}'."\n"
+							.$indentation.$format[0];
 						
 						$offset += strlen($matches[0][0]);
 					}
@@ -1081,12 +1106,13 @@
 						// Transformation de la balise
 						$ret .= $format[1]."\n"
 							."\n"
-							.str_repeat("\t", $this->block_nesting_level).'if('.$name.' '.$condition.')'."\n"
-							.str_repeat("\t", $this->block_nesting_level).'{'."\n";
+							.$indentation.'if('.$name.' '.$condition.')'."\n"
+							.$indentation.'{'."\n";
 						
-						$this->block_nesting_level++;
+						$indentationLevel++;
+						$indentation = str_repeat("\t", $indentationLevel);
 						
-						$ret .= str_repeat("\t", $this->block_nesting_level).$format[0];
+						$ret .= $indentation.$format[0];
 						
 						$offset += strlen($matches[0][0]);
 					}
@@ -1094,11 +1120,12 @@
 					{
 						//var_dump($matches);
 						
-						$this->block_nesting_level--;
+						$indentationLevel--;
+						$indentation = str_repeat("\t", $indentationLevel);
 						
 						$ret .= $format[1]."\n"
-							.str_repeat("\t", $this->block_nesting_level).'}'."\n"
-							.str_repeat("\t", $this->block_nesting_level).$format[0];
+							.$indentation.'}'."\n"
+							.$indentation.$format[0];
 						
 						$offset += strlen($matches[0][0]);
 					}
