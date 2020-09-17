@@ -933,6 +933,7 @@
 							if($p === 'ORDER')
 							{
 								$orderBy = array_shift($param);
+								$this->assertKeyValidity($orderBy, $matches[1][0]);
 								
 								if(empty($param))
 								{

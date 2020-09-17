@@ -16,6 +16,12 @@
 		public function testCreate()
 		{
 			$template = new Thrush_Template(__DIR__.'/ressources/templates');
+			
+			$ct = $template->getCurrentTheme();
+			$this->assertEquals(
+				$ct,
+				'default'
+			);
 		}
 		
 		public function testCurrentTheme()
@@ -189,14 +195,29 @@
 			);
 		}
 		
-		public function testBlockWithOrderFailure()
+		public function testBlockWithOrderFailure1()
 		{
 			$template = new Thrush_Template(__DIR__.'/ressources/templates');
 			
 			$this->expectException(Thrush_Exception::class);
 			
+			// 'IDONTKNOW' is not a valid ordering criteria
 			$template->setContentForHandle('body', 'Hello 
 				<!-- BEGIN block ORDER VAR2 IDONTKNOW -->
+				({block.VAR1} {block.VAR2}) 
+				<!-- END block -->
+				!');
+		}
+		
+		public function testBlockWithOrderFailure2()
+		{
+			$template = new Thrush_Template(__DIR__.'/ressources/templates');
+			
+			$this->expectException(Thrush_Exception::class);
+			
+			// 'var' is not a valid variable
+			$template->setContentForHandle('body', 'Hello 
+				<!-- BEGIN block ORDER var ASC -->
 				({block.VAR1} {block.VAR2}) 
 				<!-- END block -->
 				!');
