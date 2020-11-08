@@ -132,7 +132,10 @@
 				$this->defaultSemaphore, 
 				0, 
 				$this->defaultEnabled,
-				null);
+				null,
+				0, 	// Number of save operations
+				0 	// Number of load operations
+				);
 		}
 		
 		/**
@@ -229,7 +232,9 @@
 					'mode' => $values[0],
 					'tokensLeft' => max($values[1], 0),
 					'tokensMissing' => ($values[0]===self::DefaultWithLimitsMode?max(-$values[1], 0):'0'),
-					'calls' => $values[2]
+					'calls' => $values[2],
+					'savings' => $values[5],
+					'loadings' => $values[6]
 				);
 			}
 			
@@ -548,6 +553,9 @@
 			// Load from file only if exists
 			if(file_exists($fullpath))
 			{
+				$this->getMode($type);
+				$this->typeModes[$type][6]++;
+				
 				$data = file_get_contents($fullpath);
 				
 				// Extract mode and data
@@ -915,6 +923,9 @@
 		public function save(string $type, string $key, string &$data, string $pwd='')
 		{
 			$fullPath = $this->getFullPath($type, $key);
+			
+			$this->getMode($type);
+			$this->typeModes[$type][5]++;
 			
 			if($pwd !== '')
 			{
