@@ -29,12 +29,12 @@
 			
 			for($i=0; $i<50000; $i++)
 			{
-				$sitemap->addURL('file.htm');
+				$sitemap->addURL('https://www.example.com/file.htm');
 			}
 			
 			$this->expectException(Thrush_Exception::class);
 			
-			$sitemap->addURL('file.htm');
+			$sitemap->addURL('https://www.example.com/file.htm');
 		}
 		
 		public function testAddUrlWithoutProtocol()
