@@ -5,6 +5,7 @@
 - Currently published features:
   - Cache
   - Exception
+  - Sitemap (generation only, as per https://www.sitemaps.org/protocol.html, no support for Sitemap Index)
   - Template
   - RC4 encryption
   - API
