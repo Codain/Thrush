@@ -17,8 +17,7 @@
 			
 			$this->assertEquals(
 				$sitemap->getXML(),
-				'<?xml version="1.0" encoding="utf-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://www.example.org/</loc><priority>0.8</priority></url><url><loc>https://www.example.org/file.htm</loc><lastmod>2018-11-28</lastmod></url><url><loc>https://www.example.org/folder/file-escaped.php?var1=1&amp;var2=2</loc></url></urlset>
+				'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://www.example.org/</loc><priority>0.8</priority></url><url><loc>https://www.example.org/folder/file.htm</loc><lastmod>2018-11-28</lastmod></url><url><loc>https://www.example.org/folder/file-escaped.php?var1=1&amp;var2=2</loc></url></urlset>
 '
 			);
 		}
