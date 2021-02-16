@@ -273,10 +273,10 @@
 		{
 			parent::__construct('Error', '', 0);
 			
-			$errorNumber = curl_errno($curl);
+			$this->code = curl_errno($curl);
 			$errorString = curl_error($curl);
 			
-			$this->privateMessage = 'cURL Error '.$errorNumber.': '.$errorString;
+			$this->privateMessage = 'cURL Error '.$this->code.': '.$errorString;
 		}
 	}
 	
