@@ -70,19 +70,21 @@
 		*
 		* \param string $query
 		*   The query to send to Overpass
+		* \param string $key
+		*   The Cache key
 		* \param int $life
 		*   See Thrush_Cache
 		*
 		* \return array
 		*   Associative array containing date of data retrieval and an array of results
 		*/
-		public function query(string $query, int $life=Thrush_Cache::LIFE_IMMORTAL)
+		public function query(string $query, string $key=null, int $life=Thrush_Cache::LIFE_IMMORTAL)
 		{
 			$endpointUrl = 'https://overpass-api.de/api/interpreter';
 
 			try
 			{
-				$data = $this->cache->loadURLFromWebOrCache('osm', $endpointUrl.'?data='.urlencode( $query ), null, null, $life);
+				$data = $this->cache->loadURLFromWebOrCache('osm', $endpointUrl.'?data='.urlencode( $query ), null, $key, $life);
 				$res = json_decode($data, true);
 				
 				$ret = array();
@@ -149,7 +151,7 @@
 				out skel qt;';
 			}
 			
-			return $this->query($query, $life);
+			return $this->query($query, $key.'='.$value.'.json', $life);
 		}
 	}
 ?>
