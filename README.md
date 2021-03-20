@@ -9,6 +9,7 @@
   - Template
   - RC4 encryption
   - API
+    - Launch Library 2 (partial)
     - Nominatim ([lookup](https://nominatim.org/release-docs/develop/api/Lookup/) and [reverse](https://nominatim.org/release-docs/develop/api/Reverse/) only)
     - OpenLibrary ([books](https://openlibrary.org/dev/docs/api/books) only)
     - OpenStreetMap
