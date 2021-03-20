@@ -621,6 +621,8 @@
 		*   Password to encrypt data, if required
 		* \param array $callback
 		*   Optional array made of a callback and arguments to modify/analyse data before saving to cache
+		* \param array $additionalHeaders
+		*   Optional array of additional headers (e.g. array('Content-Length: 58') )
 		* 
 		* \return string
 		*   Data
@@ -632,7 +634,7 @@
 		* \throws Thrush_Cache_NoDataToLoadException If data shall be retrieved from cache but are not available.
 		* \throws Thrush_HTTPException If HTTP code different from 200
 		*/
-		public function loadURLFromWebOrCache(string $type, string $url, array $postData=null, string $key=null, $life=self::LIFE_IMMORTAL, string $pwd='', array $callback=null)
+		public function loadURLFromWebOrCache(string $type, string $url, array $postData=null, string $key=null, $life=self::LIFE_IMMORTAL, string $pwd='', array $callback=null, array $additionalHeaders=null)
 		{
 			if(is_null($key))
 			{
@@ -725,6 +727,16 @@
 				else
 				{
 					curl_setopt($curl, CURLOPT_POST, 0);
+				}
+				
+				// If we have additional headers, we add them
+				if(!is_null($additionalHeaders))
+				{
+					curl_setopt($curl, CURLOPT_HTTPHEADER, $additionalHeaders);
+				}
+				else
+				{
+					curl_setopt($curl, CURLOPT_HTTPHEADER, array());
 				}
 				
 				$data = curl_exec($curl);
