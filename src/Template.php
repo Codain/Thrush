@@ -52,7 +52,7 @@
 		/**
 		* string Path to template directory
 		*/
-		protected $themeDir = "./";
+		protected $themesDir = "./";
 
 		/**
 		* array List of theme loaded
