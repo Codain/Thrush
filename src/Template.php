@@ -444,7 +444,7 @@
 			eval($this->handles[$handle]['code']);
 			
 			// Save result if we are configured to do it
-			if($this->handles[$handle]['filename'][Thrush_Template::FILE_CACHE_KEY] != '' && !is_null($this->cache) && !$this->cache->exists('html', $this->handles[$handle]['filename'][Thrush_Template::FILE_CACHE_KEY], $this->handles[$handle]['filename'][Thrush_Template::FILE_CACHE_DURATION]))
+			if($this->handles[$handle]['filename'][Thrush_Template::FILE_CACHE_KEY] != '' && !is_null($this->cache) && $this->cache->isEnabled('html') && !$this->cache->exists('html', $this->handles[$handle]['filename'][Thrush_Template::FILE_CACHE_KEY], $this->handles[$handle]['filename'][Thrush_Template::FILE_CACHE_DURATION]))
 			{
 				$this->cache->save('html', $this->handles[$handle]['filename'][Thrush_Template::FILE_CACHE_KEY], $_str);
 			}
