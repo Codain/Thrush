@@ -1,19 +1,14 @@
 <?php
 	class ThemeBlank
 	{
-		function multiply($int, $facteur)
+		function functionNotInDefault($var)
 		{
-			return $int*$facteur;
+			return $var;
 		}
 		
-		function add($a, $b)
+		function getThemeName()
 		{
-			return $a+$b;
-		}
-		
-		function substract($a, $b)
-		{
-			return $a-$b;
+			return 'blank';
 		}
 	}
 ?>

@@ -86,14 +86,33 @@
 		{
 			$template = new Thrush_Template(__DIR__.'/ressources/templates');
 			
-			$template->setContentForHandle('body', '{ONE}+2={ONE|add(2)} and {TWO}+3={TWO|add(3)}');
+			$template->setContentForHandle('body', '{ONE}+2={ONE|add(2)} and {TWO}+3={TWO|add(3)} (theme={VOID|getThemeName()})');
 			$template->setRootVariable('ONE', 1);
 			$template->setRootVariable('TWO', 2);
 			$res = $template->render('body', false);
 			
 			$this->assertEquals(
 				$res,
-				'1+2=3 and 2+3=5'
+				'1+2=3 and 2+3=5 (theme=default)'
+			);
+		}
+		
+		public function testVariableWithComplexFunctionsAndTheme()
+		{
+			$template = new Thrush_Template(__DIR__.'/ressources/templates');
+			
+			$template->pushCurrentTheme('blank');
+			$template->setContentForHandle('body', '{ONE}+{TWO|functionNotInDefault()}={ONE|add(2)} and {TWO}+3={TWO|add(3)} (theme={VOID|getThemeName()})');
+			$template->setRootVariable('ONE', 1);
+			$template->setRootVariable('TWO', 2);
+			$template->popCurrentTheme();
+			$res = $template->render('body', false);
+			
+			// Method in theme 'blank' shall be called whenever possible
+			
+			$this->assertEquals(
+				$res,
+				'1+2=3 and 2+3=5 (theme=blank)'
 			);
 		}
 		

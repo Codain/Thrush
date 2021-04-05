@@ -15,5 +15,10 @@
 		{
 			return $a-$b;
 		}
+		
+		function getThemeName()
+		{
+			return 'default';
+		}
 	}
 ?>
