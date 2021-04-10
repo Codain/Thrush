@@ -364,7 +364,7 @@
 		{
 			if(empty($this->themeStack))
 			{
-				throw new Thrush_Exception('Error', 'Not theme as been defined');
+				throw new Thrush_Exception('Error', 'No theme as been defined');
 			}
 			
 			return $this->themeStack[0];
