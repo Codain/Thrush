@@ -17,5 +17,27 @@
 				new Thrush_Wikipedia($cache)
 			);
 		}
+		
+		public function testParseArticleUrl()
+		{
+			$results = Thrush_Wikipedia::parseArticleUrl('https://en.wikipedia.org/wiki/The_Beatles');
+			
+			$this->assertEquals(
+				'https',
+				$results['scheme']
+			);
+			$this->assertEquals(
+				'en',
+				$results['language']
+			);
+			$this->assertEquals(
+				'en.wikipedia.org',
+				$results['host']
+			);
+			$this->assertEquals(
+				'The_Beatles',
+				$results['title']
+			);
+		}
 	}
 ?>

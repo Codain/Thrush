@@ -63,6 +63,88 @@
 		}
 		
 		/**
+		* Parse a Wikipedia article URL extracting its main properties.
+		* For instance with "https://en.wikipedia.org/wiki/The_Beatles":
+		*   - "scheme" = "https" (as in PHP parse_url() result)
+		*   - "host" = "en.wikipedia.org" (as in PHP parse_url() result)
+		*   - "language" = "en"
+		*   - "title": "The_Beatles"
+		*
+		* \param string $url
+		*   The URL to parse
+		*
+		* \return array
+		*   Array of properties
+		*/
+		static function parseArticleUrl(string $url)
+		{
+			$data = parse_url($url);
+			$ret = array();
+			
+			if(array_key_exists('scheme', $data))
+				$ret['scheme'] = $data['scheme'];
+			
+			if(array_key_exists('host', $data))
+			{
+				$ret['host'] = $data['host'];
+				
+				$exp = explode('.', $data['host']);
+				$ret['language'] = $exp[0];
+			}
+			
+			$exp = explode('/', $data['path']);
+			$ret['title'] = array_pop($exp);
+			
+			return $ret;
+		}
+		
+		/**
+		* Query Wikipedia server for page properties of an article.
+		*
+		* \param string $title
+		*   Wikipedia article title
+		* \param string $language
+		*   Language to consider (use Wikipedia subdomain). Default is 'en' for English.
+		* \param array $overrideAttributes
+		*   List of attributes to customize the query, see https://en.wikipedia.org/w/api.php?action=help&modules=query%2Bpageprops
+		*
+		* \return array
+		*   JSON array of the result
+		*/
+		public function queryPageProps(string $title, string $language='en', array $overrideAttributes=array())
+		{
+			$endpointUrl = 'https://'.$language.'.wikipedia.org/w/api.php';
+			
+			// Generate URL-encoded query string
+			// See https://en.wikipedia.org/w/api.php?action=help&modules=query%2Bpageprops
+			$attributes = array(
+				'action' => 'query',
+				'format' => 'json',
+				'prop' => 'pageprops',
+				'ppprop' => 'wikibase_item',
+				'redirects' => '1',
+				'titles' => $title
+				);
+			
+			// Merge with user defined attributes
+			$attributes = array_merge($attributes, $overrideAttributes);
+			
+			$queryString = http_build_query($attributes);
+			
+			// Fetch data
+			try
+			{
+				$data = $this->cache->loadURLFromWebOrCache('wikipedia', $endpointUrl.'?'.$queryString, null, null, Thrush_Cache::LIFE_IMMORTAL);
+				
+				return json_decode($data, true);
+			}
+			catch(Thrush_Cache_NoDataToLoadException $e)
+			{
+				return null;
+			}
+		}
+		
+		/**
 		* Query Wikipedia server for extracts of an article.
 		*
 		* \param string $title
