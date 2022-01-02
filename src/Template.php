@@ -899,7 +899,7 @@
 				{
 					$contentToCompile = substr($content, $offset);
 					
-					if(preg_match('#^<!--\sBEGIN\s(.*?)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
+					if(preg_match('#^<!--\sBEGIN\s(.*)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
 					{
 						//var_dump($matches);
 						
@@ -1002,7 +1002,7 @@
 						
 						$offset += strlen($matches[0][0]);
 					}
-					elseif(preg_match('#^<!--\sEND (.*?)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
+					elseif(preg_match('#^<!--\sEND (.*)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
 					{
 						//var_dump($matches);
 						
@@ -1025,7 +1025,7 @@
 						
 						$offset += strlen($matches[0][0]);
 					}
-					elseif(preg_match('#^<!--\sISSET\s(.*?)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
+					elseif(preg_match('#^<!--\sISSET\s(.*)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
 					{
 						//var_dump($matches);
 						
@@ -1080,7 +1080,7 @@
 						
 						$offset += strlen($matches[0][0]);
 					}
-					elseif(preg_match('#^<!--\sELSE\s(.*?)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
+					elseif(preg_match('#^<!--\sELSE\s(.*)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
 					{
 						//var_dump($matches);
 						
@@ -1092,7 +1092,7 @@
 						
 						$offset += strlen($matches[0][0]);
 					}
-					elseif(preg_match('#^<!--\sENDISSET\s(.*?)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
+					elseif(preg_match('#^<!--\sENDISSET\s(.*)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
 					{
 						//var_dump($matches);
 						
@@ -1102,7 +1102,7 @@
 						
 						$offset += strlen($matches[0][0]);
 					}
-					elseif(preg_match('#^<!--\sIF\s(.*?)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
+					elseif(preg_match('#^<!--\sIF\s(.*)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
 					{
 						//var_dump($matches);
 						list($name, $condition) = $this->explodeConsideringPunctuation(' ', $matches[1][0], 1);
@@ -1121,7 +1121,7 @@
 						
 						$offset += strlen($matches[0][0]);
 					}
-					elseif(preg_match('#^<!--\sENDIF\s(.*?)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
+					elseif(preg_match('#^<!--\sENDIF\s(.*)\s-->#Ui', $contentToCompile, $matches, PREG_OFFSET_CAPTURE))
 					{
 						//var_dump($matches);
 						

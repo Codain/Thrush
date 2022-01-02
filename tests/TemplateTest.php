@@ -158,6 +158,30 @@
 			);
 		}
 		
+		public function testBlockWithBasicVariableInline()
+		{
+			$template = new Thrush_Template(__DIR__.'/ressources/templates');
+			
+			$template->setContentForHandle('body', 'Hello <!-- BEGIN block -->({block.VAR1} {block.VAR2}) <!-- END block -->!');
+			
+			for($i=3; $i>=0; $i--)
+			{
+				$template->setNewBlockVariables('block', array(
+					'VAR1' => $i,
+					'VAR2' => 3-$i
+					));
+			}
+			
+			$res = $template->render('body', false);
+			
+			//$res = $this->cleanOutput($res);
+			
+			$this->assertEquals(
+				$res,
+				'Hello (3 0) (2 1) (1 2) (0 3) !'
+			);
+		}
+		
 		public function testBlockWithOrderAsc()
 		{
 			$template = new Thrush_Template(__DIR__.'/ressources/templates');
