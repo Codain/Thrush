@@ -10,7 +10,7 @@
 	{
 		public function testCanBeCreatedFromValidEmailAddress()
 		{
-			$cache = new Thrush_Cache('localhost', 'localhost', './cache/');
+			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
 			
 			$this->assertInstanceOf(
 				Thrush_Nominatim::class,
@@ -20,7 +20,7 @@
 		
 		public function testCannotBeCreatedFromInvalidEmailAddress()
 		{
-			$cache = new Thrush_Cache('localhost', 'localhost', './cache/');
+			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
 			
 			$this->expectException(Thrush_Exception::class);
 

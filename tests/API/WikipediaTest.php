@@ -10,7 +10,7 @@
 	{
 		public function testValidCache()
 		{
-			$cache = new Thrush_Cache('localhost', 'localhost', './cache/');
+			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
 			
 			$this->assertInstanceOf(
 				Thrush_Wikipedia::class,

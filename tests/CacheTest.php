@@ -11,18 +11,18 @@
 		$data = $testString;
 	}
 	
-	final class Thrush_CacheTest extends TestCase
+	final class Thrush_Cache_FilesTest extends TestCase
 	{
 		public function testDirectoryDoesNotExists()
 		{
 			$this->expectException(Thrush_Exception::class);
 			
-			$cache = new Thrush_Cache('localhost', 'localhost', './doesnotexists/');
+			$cache = new Thrush_Cache_Files('localhost', 'localhost', './doesnotexists/');
 		}
 		
 		public function testEnableDisable()
 		{
-			$cache = new Thrush_Cache('localhost', 'localhost', './cache/');
+			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
 			
 			$cache->enable('CacheTest');
 			$this->assertEquals(
@@ -45,7 +45,7 @@
 		
 		protected function incExistsLoadSaveRemove(string $type, string $key, string $data, string $pwd)
 		{
-			$cache = new Thrush_Cache('localhost', 'localhost', './cache/');
+			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
 			
 			$cache->enable($type);
 			$this->assertEquals(
@@ -117,7 +117,7 @@
 		
 		public function testLoadUrlCallback()
 		{
-			$cache = new Thrush_Cache('localhost', 'localhost', './cache/');
+			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
 			$type = 'CacheTest';
 			$cache->disable($type);
 			$testString = ''; // A dummy variable to test callback
@@ -143,7 +143,7 @@
 		
 		public function testHttpError404()
 		{
-			$cache = new Thrush_Cache('localhost', 'localhost', './cache/');
+			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
 			$type = 'CacheTest';
 			
 			$cache->enable($type);
@@ -155,7 +155,7 @@
 		
 		public function testHttpError500()
 		{
-			$cache = new Thrush_Cache('localhost', 'localhost', './cache/');
+			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
 			$type = 'CacheTest';
 			
 			$cache->enable($type);

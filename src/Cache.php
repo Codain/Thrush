@@ -34,8 +34,7 @@
 	require_once __DIR__.'/Exception.php';
 	
 	/**
-	* This class allows to access to a cache in order to store/retrieve data.
-	* Cache is implemented as a system file.
+	* This class provides an abstraction to provide caching capabilities in order to store/retrieve data.
 	*
 	* Regarding external URL call, each type of cache can be configured with a defined mode:
 	*  - DefaultMode: If the requested data are already stored and are not outdated, it will be readback. Otherwise an external call will be made.
@@ -43,7 +42,7 @@
 	*  - DefaultWithLimitsMode: Same as default mode but with a counter (semaphore) before switching to CacheOnlyMode.
 	*  - AlwaysRefreshMode: Always issue external call and save in cache.
 	*/
-	class Thrush_Cache
+	abstract class Thrush_Cache
 	{
 		const LIFE_IMMORTAL = -1;
 		const LIFE_HOUR = 3600;
@@ -56,11 +55,6 @@
 		const CacheOnlyMode = 1;
 		const DefaultWithLimitsMode = 2;
 		const AlwaysRefreshMode = 3;
-		
-		/**
-		* string Path to cache directory from website root.
-		*/
-		protected $root = './cache/';
 		
 		/**
 		* string Website name (used for user-agent HTTP attribute).
@@ -333,17 +327,9 @@
 		*   Website name, used in HTTP User-Agent attribute
 		* \param string $websiteURL
 		*   Website URL, used in HTTP User-Agent attribute
-		* \param string $root
-		*   Path from current working directory to cache directory
 		*/
-		function __construct(string $websiteName, string $websiteURL, string $root='./cache/')
+		function __construct(string $websiteName, string $websiteURL)
 		{
-			if(!file_exists($root) || !is_dir($root))
-			{
-				throw new Thrush_Exception('Error', 'Directory "'.$root.'" does not exist or is not a directory');
-			}
-			
-			$this->root = $root;
 			$this->websiteName = $websiteName;
 			$this->websiteURL = $websiteURL;
 			
@@ -368,62 +354,16 @@
 		/**
 		* Remove all data of a given cache type.
 		* 
-		* \param string $type
-		*   Name of the cache to use
-		* \param string $glob
-		*   Name pattern to remove, "" if all files are to be removed.
-		* 
 		* \return int
-		*   Number of files removed, -1 if error
+		*   Number of entries removed, -1 if error
 		*
 		* \see remove()
 		*/
-		public function clear(string $type, string $glob='')
-		{
-			$nb = -1;
-			$dir = $this->root.$type.'/';
-			
-			if($glob !== '')
-			{
-				$arr = glob($dir.$glob);
-				$nb = count($arr);
-				
-				foreach($arr as $file)
-					unlink($file);
-			}
-			else
-			{
-				if ($handle = opendir($dir))
-				{
-					$nb = 0;
-					while (false !== ($file = readdir($handle)))
-					{
-						if($file != '..' && $file != '.' && is_file($dir.$file) && $file != '.htaccess')
-						{
-							$nb++;
-							unlink($dir.$file);
-						}
-					}
-					
-					closedir($handle);
-				}
-			}
-			
-			clearstatcache();
-			
-			return $nb;
-		}
+		abstract public function clear(string $type, string $glob='');
 		
 		/**
 		* get if a data is stored in the cache and if it has not expired.
 		* If variable \c $_GET['recalcul'] is set, this function returns always \c false.
-		* 
-		* \param string $type
-		*   Name of the cache to use
-		* \param string $key
-		*   Key associated to the data
-		* \param int $life
-		*   Cache life in seconds
 		* 
 		* \return bool
 		*   True if there is no error, false otherwise
@@ -431,42 +371,15 @@
 		* \see load()
 		* \see save()
 		*/
-		public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL)
-		{
-			$fullPath = $this->getFullPath($type, $key);
-			
-			// If data exists in the cache
-			if(file_exists($fullPath))
-			{
-				// Return whether it is still valid or not
-				if($life <= 0)
-				{
-					return true;
-				}
-				else
-				{
-					return (($this->time-$this->getCreationTime($type, $key)) < $life);
-				}
-			}
-			
-			return false;
-		}
+		abstract public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL);
 		
 		/**
 		* Get creation date of last loaded data.
 		* 
-		* \param string $type
-		*   Name of the cache to use
-		* \param string $key
-		*   Key associated to the data
-		* 
 		* \return int
 		*   Unix timestamp
 		*/
-		public function getCreationTime(string $type, string $key)
-		{
-			return filemtime($this->getFullPath($type, $key));
-		}
+		abstract public function getCreationTime(string $type, string $key);
 		
 		/**
 		* Get creation date of last data.
@@ -486,48 +399,7 @@
 		}
 		
 		/**
-		* Get path from root of a data, no mater if it exists or not.
-		* 
-		* \param string $type
-		*   Name of the cache to use
-		* \param string $key
-		*   Key associated to the data
-		* 
-		* \return string
-		*   Path from root
-		*
-		* \see getRoot()
-		*/
-		public function getFullPath(string $type, string $key)
-		{
-			if($type === '')
-				return $this->root.$key;
-			
-			return $this->root.$type.'/'.$key;
-		}
-		
-		/**
-		* Get path from current working directory to cache directory, no matter if it exist or not.
-		* 
-		* \return string
-		*   Path
-		*
-		* \see getFullPath()
-		*/
-		public function getRoot()
-		{
-			return $this->root;
-		}
-		
-		/**
 		* Retrieve data from cache.
-		* 
-		* \param string $type
-		*   Name of the cache to use
-		* \param string $key
-		*   Key associated to the data
-		* \param string $pwd
-		*   Password to encrypt data, if required
 		* 
 		* \return string
 		*   Data loaded
@@ -540,61 +412,7 @@
 		* \throws Thrush_Exception If password provided is incorrect or if data are encrypted and no password is provided
 		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
 		*/
-		public function load(string $type, string $key, string $pwd='')
-		{
-			// Reset last date
-			$this->lastDate = null;
-			$this->lastDateType = $type;
-			$this->lastDateKey = $key;
-			
-			$data = '';
-			$fullpath = $this->getFullPath($type, $key);
-			
-			// Load from file only if exists
-			if(file_exists($fullpath))
-			{
-				$this->getMode($type);
-				$this->typeModes[$type][6]++;
-				
-				$data = file_get_contents($fullpath);
-				
-				// Extract mode and data
-				$mode = mb_substr($data, 0, 5);
-				
-				// If data is encrypted, decrypt them
-				if($mode === 'CRYPT')
-				{
-					if($pwd !== '')
-					{
-						$data = mb_substr($data, 5);
-						
-						Thrush_Crypt::decrypt($data, $pwd);
-						
-						if(mb_substr($data, 0, 16) !== $this->pwdCheck)
-						{
-							$data = '';
-							throw new Thrush_Exception('Error', 'Password incorrect');
-						}
-						
-						$data = mb_substr($data, 16);
-					}
-					else
-					{
-						throw new Thrush_Exception('Error', 'Data requested is crypted');
-					}
-				}
-				else if($mode === 'CLEAR')
-				{
-					$data = mb_substr($data, 5);
-				}
-			}
-			else
-			{
-				throw new Thrush_Cache_NoDataToLoadException();
-			}
-			
-			return $data;
-		}
+		abstract public function load(string $type, string $key, string $pwd='');
 		
 		/**
 		* Fetch data from a given URL, either from Web or cache.
@@ -856,6 +674,288 @@
 			}
 			
 			return false;
+		}
+		
+		/**
+		* Remove data from cache.
+		* 
+		* \return bool
+		*   True if there is no error, false otherwise
+		*
+		* \see clear()
+		* \see save()
+		* \see load()
+		* \see exists()
+		*/
+		abstract public function remove(string $type, string $key);
+
+		/**
+		* Move data in cache.
+		* If data does not exists, do nothing.
+		* 
+		* \return bool
+		*   True if there is no error, false otherwise
+		*/
+		abstract public function move(string $fromType, string $fromKey, string $toType, string $toKey);
+		
+		/**
+		* Store some data in cache.
+		* 
+		* \return bool
+		*   True if there is no error, false otherwise
+		*
+		* \see exists()
+		* \see load()
+		* \see remove()
+		*/
+		abstract public function save(string $type, string $key, string &$data, string $pwd='');
+	}
+	
+	/**
+	* This class implements a caching system using files
+	*/
+	class Thrush_Cache_Files extends Thrush_Cache
+	{
+		/**
+		* string Path to cache directory from website root.
+		*/
+		protected $root = './cache/';
+		
+		/**
+		* Constructor.
+		* For performance reasons it is highly recommended for \c $root to be an absolute path (see \c realpath()).
+		* 
+		* \param string $websiteName
+		*   Website name, used in HTTP User-Agent attribute
+		* \param string $websiteURL
+		*   Website URL, used in HTTP User-Agent attribute
+		* \param string $root
+		*   Path from current working directory to cache directory
+		*/
+		function __construct(string $websiteName, string $websiteURL, string $root='./cache/')
+		{
+			parent::__construct($websiteName, $websiteURL);
+			
+			if(!file_exists($root) || !is_dir($root))
+			{
+				throw new Thrush_Exception('Error', 'Directory "'.$root.'" does not exist or is not a directory');
+			}
+			
+			$this->root = $root;
+		}
+		
+		/**
+		* Get path from current working directory to cache directory, no matter if it exist or not.
+		* 
+		* \return string
+		*   Path
+		*
+		* \see getFullPath()
+		*/
+		public function getRoot()
+		{
+			return $this->root;
+		}
+		
+		/**
+		* Get path from root of a data, no mater if it exists or not.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* 
+		* \return string
+		*   Path from root
+		*
+		* \see getRoot()
+		*/
+		public function getFullPath(string $type, string $key)
+		{
+			if($type === '')
+				return $this->root.$key;
+			
+			return $this->root.$type.'/'.$key;
+		}
+		
+		/**
+		* Remove all data of a given cache type.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $glob
+		*   Name pattern to remove, "" if all files are to be removed.
+		* 
+		* \return int
+		*   Number of files removed, -1 if error
+		*
+		* \see remove()
+		*/
+		public function clear(string $type, string $glob='')
+		{
+			$nb = -1;
+			$dir = $this->root.$type.'/';
+			
+			if($glob !== '')
+			{
+				$arr = glob($dir.$glob);
+				$nb = count($arr);
+				
+				foreach($arr as $file)
+					unlink($file);
+			}
+			else
+			{
+				if ($handle = opendir($dir))
+				{
+					$nb = 0;
+					while (false !== ($file = readdir($handle)))
+					{
+						if($file != '..' && $file != '.' && is_file($dir.$file) && $file != '.htaccess')
+						{
+							$nb++;
+							unlink($dir.$file);
+						}
+					}
+					
+					closedir($handle);
+				}
+			}
+			
+			clearstatcache();
+			
+			return $nb;
+		}
+		
+		/**
+		* get if a data is stored in the cache and if it has not expired.
+		* If variable \c $_GET['recalcul'] is set, this function returns always \c false.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* \param int $life
+		*   Cache life in seconds
+		* 
+		* \return bool
+		*   True if there is no error, false otherwise
+		*
+		* \see load()
+		* \see save()
+		*/
+		public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL)
+		{
+			$fullPath = $this->getFullPath($type, $key);
+			
+			// If data exists in the cache
+			if(file_exists($fullPath))
+			{
+				// Return whether it is still valid or not
+				if($life <= 0)
+				{
+					return true;
+				}
+				else
+				{
+					return (($this->time-$this->getCreationTime($type, $key)) < $life);
+				}
+			}
+			
+			return false;
+		}
+		
+		/**
+		* Get creation date of last loaded data.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* 
+		* \return int
+		*   Unix timestamp
+		*/
+		public function getCreationTime(string $type, string $key)
+		{
+			return filemtime($this->getFullPath($type, $key));
+		}
+		
+		/**
+		* Retrieve data from cache.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* \param string $pwd
+		*   Password to encrypt data, if required
+		* 
+		* \return string
+		*   Data loaded
+		*
+		* \see chargerUrl()
+		* \see exists()
+		* \see save()
+		* \see remove()
+		*
+		* \throws Thrush_Exception If password provided is incorrect or if data are encrypted and no password is provided
+		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
+		*/
+		public function load(string $type, string $key, string $pwd='')
+		{
+			// Reset last date
+			$this->lastDate = null;
+			$this->lastDateType = $type;
+			$this->lastDateKey = $key;
+			
+			$data = '';
+			$fullpath = $this->getFullPath($type, $key);
+			
+			// Load from file only if exists
+			if(file_exists($fullpath))
+			{
+				$this->getMode($type);
+				$this->typeModes[$type][6]++;
+				
+				$data = file_get_contents($fullpath);
+				
+				// Extract mode and data
+				$mode = mb_substr($data, 0, 5);
+				
+				// If data is encrypted, decrypt them
+				if($mode === 'CRYPT')
+				{
+					if($pwd !== '')
+					{
+						$data = mb_substr($data, 5);
+						
+						Thrush_Crypt::decrypt($data, $pwd);
+						
+						if(mb_substr($data, 0, 16) !== $this->pwdCheck)
+						{
+							$data = '';
+							throw new Thrush_Exception('Error', 'Password incorrect');
+						}
+						
+						$data = mb_substr($data, 16);
+					}
+					else
+					{
+						throw new Thrush_Exception('Error', 'Data requested is crypted');
+					}
+				}
+				else if($mode === 'CLEAR')
+				{
+					$data = mb_substr($data, 5);
+				}
+			}
+			else
+			{
+				throw new Thrush_Cache_NoDataToLoadException();
+			}
+			
+			return $data;
 		}
 		
 		/**
