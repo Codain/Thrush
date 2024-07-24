@@ -1044,11 +1044,11 @@
 				$data2 = $this->pwdCheck.$data;
 				Thrush_Crypt::encrypt($data2, $pwd);
 				
-				return file_put_contents($fullPath, 'CRYPT'.$data2);
+				return (file_put_contents($fullPath, 'CRYPT'.$data2) === false?false:true);
 			}
 			else
 			{
-				return file_put_contents($fullPath, 'CLEAR'.$data);
+				return (file_put_contents($fullPath, 'CLEAR'.$data) === false?false:true);
 			}
 		}
 	}
