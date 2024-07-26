@@ -739,7 +739,12 @@
 		{
 			parent::__construct($websiteName, $websiteURL);
 			
-			if(!file_exists($root) || !is_dir($root))
+			if(substr($root, -1) != '/')
+			{
+				$root .= '/';
+			}
+			
+			if(!is_dir($root))
 			{
 				throw new Thrush_Exception('Error', 'Directory "'.$root.'" does not exist or is not a directory');
 			}
