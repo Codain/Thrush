@@ -452,7 +452,7 @@
 		*/
 		protected function assertBlockNameValidity(string $handle, string $context='')
 		{
-			$pattern = '/^[a-z0-9_]+$/';
+			$pattern = '/^[a-zA-Z0-9_]+$/';
 			if(preg_match($pattern, $handle) === 0)
 			{
 				throw new Thrush_Template_InvalidPatternException($handle, $pattern, $context);
