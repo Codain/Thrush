@@ -739,9 +739,9 @@
 		{
 			parent::__construct($websiteName, $websiteURL);
 			
-			if(substr($root, -1) != '/')
+			if(substr($root, -strlen(DIRECTORY_SEPARATOR)) !== DIRECTORY_SEPARATOR)
 			{
-				$root .= '/';
+				$root .= DIRECTORY_SEPARATOR;
 			}
 			
 			if(!is_dir($root))
@@ -783,7 +783,7 @@
 			if($type === '')
 				return $this->root.$key;
 			
-			return $this->root.$type.'/'.$key;
+			return $this->root.$type.DIRECTORY_SEPARATOR.$key;
 		}
 		
 		/**
@@ -802,7 +802,7 @@
 		public function clear(string $type, string $glob='')
 		{
 			$nb = -1;
-			$dir = $this->root.$type.'/';
+			$dir = $this->root.$type.DIRECTORY_SEPARATOR;
 			
 			if($glob !== '')
 			{
