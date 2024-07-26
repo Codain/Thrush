@@ -13,11 +13,34 @@
 	
 	final class Thrush_Cache_FilesTest extends TestCase
 	{
-		public function testDirectoryDoesNotExists()
+		public function testDirectoryDoesNotExists1()
 		{
 			$this->expectException(Thrush_Exception::class);
 			
 			$cache = new Thrush_Cache_Files('localhost', 'localhost', './doesnotexists/');
+		}
+		
+		public function testDirectoryDoesNotExists2()
+		{
+			$this->expectException(Thrush_Exception::class);
+			
+			$cache = new Thrush_Cache_Files('localhost', 'localhost', './doesnotexists');
+		}
+		
+		public function testDirectoryExists1()
+		{
+			$this->assertInstanceOf(
+				Thrush_Cache_Files::class,
+				new Thrush_Cache_Files('localhost', 'localhost', './cache/')
+			);
+		}
+		
+		public function testDirectoryExists2()
+		{
+			$this->assertInstanceOf(
+				Thrush_Cache_Files::class,
+				new Thrush_Cache_Files('localhost', 'localhost', './cache')
+			);
 		}
 		
 		public function testEnableDisable()
