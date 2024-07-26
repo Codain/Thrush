@@ -580,7 +580,10 @@
 					// Save data only if requested
 					if($this->isEnabled($type))
 					{
-						$this->save($type, $key, $data, $pwd);
+						if($this->save($type, $key, $data, $pwd) === false)
+						{
+							throw new Thrush_Exception('Error', 'Unable to save the result');
+						}
 					}
 					
 					// Save last retrieved data
