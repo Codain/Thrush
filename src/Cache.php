@@ -722,11 +722,11 @@
 		/**
 		* string Path to cache directory from website root.
 		*/
-		protected $root = './cache/';
+		protected $root = null;
 		
 		/**
 		* Constructor.
-		* For performance reasons it is highly recommended for \c $root to be an absolute path (see \c realpath()).
+		* For performance and security reasons it is highly recommended for \c $root to be an absolute path (see \c realpath()).
 		* 
 		* \param string $websiteName
 		*   Website name, used in HTTP User-Agent attribute
@@ -735,7 +735,7 @@
 		* \param string $root
 		*   Path from current working directory to cache directory
 		*/
-		function __construct(string $websiteName, string $websiteURL, string $root='./cache/')
+		function __construct(string $websiteName, string $websiteURL, string $root)
 		{
 			parent::__construct($websiteName, $websiteURL);
 			
