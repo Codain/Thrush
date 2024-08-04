@@ -6,15 +6,15 @@
 	
 	use PHPUnit\Framework\TestCase;
 
-	final class Thrush_NominatimTest extends TestCase
+	final class Thrush_API_NominatimTest extends TestCase
 	{
 		public function testCanBeCreatedFromValidEmailAddress()
 		{
 			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
 			
 			$this->assertInstanceOf(
-				Thrush_Nominatim::class,
-				new Thrush_Nominatim($cache, 'user@example.com')
+				Thrush_API_Nominatim::class,
+				new Thrush_API_Nominatim($cache, 'user@example.com')
 			);
 		}
 		
@@ -24,7 +24,7 @@
 			
 			$this->expectException(Thrush_Exception::class);
 
-			new Thrush_Nominatim($cache, 'invalid');
+			new Thrush_API_Nominatim($cache, 'invalid');
 		}
 		
 		/*public function testCanBeUsedAsString(): void
