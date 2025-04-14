@@ -996,6 +996,7 @@
 						}
 						
 						$ret .= $indentation.''.$this->getPhpStringForBlockKey($block_names, "_ROW").' = $_'.$name.'_i;'."\n"
+							.$indentation.''.$this->getPhpStringForBlockKey($block_names, "_IS_LAST").' = ($_'.$name.'_i==$_'.$name.'_count-1);'."\n"
 							//.$indentation.'$this->templateDataPointerI++;'."\n"
 							//.$indentation.'$this->templateDataPointer[$this->templateDataPointerI] =& '.$this->getPhpStringForBlockKey($block_names, '').';'."\n"
 							.$indentation.$format[0];
