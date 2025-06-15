@@ -256,6 +256,87 @@
 			
 			return $head;
 		}
+		
+		/**
+		* Get information on an HTTP response status code.
+		*
+		* \param int code
+		*   Code of the HTTP response status
+		*
+		* \return array|null
+		*   Array of data
+		*/
+		static function getInformation(int $code)
+		{
+			$httpCodeInformation = array(
+				100 => array('code' => 100, 'shortDescription' => 'Continue'),
+				101 => array('code' => 101, 'shortDescription' => 'Switching Protocols'),
+				102 => array('code' => 102, 'shortDescription' => 'Processing'),
+				103 => array('code' => 103, 'shortDescription' => 'Early Hints'),
+				200 => array('code' => 200, 'shortDescription' => 'OK'),
+				201 => array('code' => 201, 'shortDescription' => 'Created'),
+				202 => array('code' => 202, 'shortDescription' => 'Accepted'),
+				203 => array('code' => 203, 'shortDescription' => 'Non-Authoritative Information'),
+				204 => array('code' => 204, 'shortDescription' => 'No Content'),
+				205 => array('code' => 205, 'shortDescription' => 'Reset Content'),
+				206 => array('code' => 206, 'shortDescription' => 'Partial Content'),
+				207 => array('code' => 207, 'shortDescription' => 'Multi-Status'),
+				208 => array('code' => 208, 'shortDescription' => 'Already Reported'),
+				226 => array('code' => 226, 'shortDescription' => 'IM Used'),
+				300 => array('code' => 300, 'shortDescription' => 'Multiple Choices'),
+				301 => array('code' => 301, 'shortDescription' => 'Moved Permanently'),
+				302 => array('code' => 302, 'shortDescription' => 'Found'),
+				303 => array('code' => 303, 'shortDescription' => 'See Other'),
+				304 => array('code' => 304, 'shortDescription' => 'Not Modified'),
+				307 => array('code' => 307, 'shortDescription' => 'Temporary Redirect'),
+				308 => array('code' => 308, 'shortDescription' => 'Permanent Redirect'),
+				400 => array('code' => 400, 'shortDescription' => 'Bad Request'),
+				401 => array('code' => 401, 'shortDescription' => 'Unauthorized'),
+				402 => array('code' => 402, 'shortDescription' => 'Payment Required'),
+				403 => array('code' => 403, 'shortDescription' => 'Forbidden'),
+				404 => array('code' => 404, 'shortDescription' => 'Not Found'),
+				405 => array('code' => 405, 'shortDescription' => 'Method Not Allowed'),
+				406 => array('code' => 406, 'shortDescription' => 'Not Acceptable'),
+				407 => array('code' => 407, 'shortDescription' => 'Proxy Authentication Required'),
+				408 => array('code' => 408, 'shortDescription' => 'Request Timeout'),
+				409 => array('code' => 409, 'shortDescription' => 'Conflict'),
+				410 => array('code' => 410, 'shortDescription' => 'Gone'),
+				411 => array('code' => 411, 'shortDescription' => 'Length Required'),
+				412 => array('code' => 412, 'shortDescription' => 'Precondition Failed'),
+				413 => array('code' => 413, 'shortDescription' => 'Content Too Large'),
+				414 => array('code' => 414, 'shortDescription' => 'URI Too Long'),
+				415 => array('code' => 415, 'shortDescription' => 'Unsupported Media Type'),
+				416 => array('code' => 416, 'shortDescription' => 'Range Not Satisfiable'),
+				417 => array('code' => 417, 'shortDescription' => 'Expectation Failed'),
+				418 => array('code' => 418, 'shortDescription' => 'I\'m a teapot'),
+				421 => array('code' => 421, 'shortDescription' => 'Misdirected Request'),
+				422 => array('code' => 422, 'shortDescription' => 'Unprocessable Content'),
+				423 => array('code' => 423, 'shortDescription' => 'Locked'),
+				424 => array('code' => 424, 'shortDescription' => 'Failed Dependency'),
+				425 => array('code' => 425, 'shortDescription' => 'Too Early'),
+				426 => array('code' => 426, 'shortDescription' => 'Upgrade Required'),
+				428 => array('code' => 428, 'shortDescription' => 'Precondition Required'),
+				429 => array('code' => 429, 'shortDescription' => 'Too Many Requests'),
+				431 => array('code' => 431, 'shortDescription' => 'Request Header Fields Too Large'),
+				451 => array('code' => 451, 'shortDescription' => 'Unavailable For Legal Reasons'),
+				500 => array('code' => 500, 'shortDescription' => 'Internal Server Error'),
+				501 => array('code' => 501, 'shortDescription' => 'Not Implemented'),
+				502 => array('code' => 502, 'shortDescription' => 'Bad Gateway'),
+				503 => array('code' => 503, 'shortDescription' => 'Service Unavailable'),
+				504 => array('code' => 504, 'shortDescription' => 'Gateway Timeout'),
+				505 => array('code' => 505, 'shortDescription' => 'HTTP Version Not Supported'),
+				506 => array('code' => 506, 'shortDescription' => 'Variant Also Negotiates'),
+				507 => array('code' => 507, 'shortDescription' => 'Insufficient Storage'),
+				508 => array('code' => 508, 'shortDescription' => 'Loop Detected'),
+				510 => array('code' => 510, 'shortDescription' => 'Not Extended'),
+				511 => array('code' => 511, 'shortDescription' => 'Network Authentication Required')
+			);
+			
+			if(array_key_exists($code, $httpCodeInformation))
+				return $httpCodeInformation[$code];
+			
+			return null;
+		}
 	}
 	
 	/**
