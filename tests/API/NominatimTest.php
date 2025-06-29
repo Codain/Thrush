@@ -11,20 +11,22 @@
 		public function testCanBeCreatedFromValidEmailAddress()
 		{
 			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
+			$webPageLoader = new Thrush_WebPageLoader($cache, 'nominatim', 'localhost', 'localhost');
 			
 			$this->assertInstanceOf(
 				Thrush_API_Nominatim::class,
-				new Thrush_API_Nominatim($cache, 'user@example.com')
+				new Thrush_API_Nominatim($webPageLoader, 'user@example.com')
 			);
 		}
 		
 		public function testCannotBeCreatedFromInvalidEmailAddress()
 		{
 			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
+			$webPageLoader = new Thrush_WebPageLoader($cache, 'nominatim', 'localhost', 'localhost');
 			
 			$this->expectException(Thrush_Exception::class);
 
-			new Thrush_API_Nominatim($cache, 'invalid');
+			new Thrush_API_Nominatim($webPageLoader, 'invalid');
 		}
 		
 		/*public function testCanBeUsedAsString(): void

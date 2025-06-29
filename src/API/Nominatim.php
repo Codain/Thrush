@@ -30,8 +30,8 @@
 	 * \license   https://opensource.org/licenses/MIT     MIT License
 	 */
 	 
-	require_once __DIR__.'/../Cache.php';
 	require_once __DIR__.'/../Exception.php';
+	require_once __DIR__.'/../WebPageLoader.php';
 	require_once __DIR__.'/../Misc/OsmObjects.php';
 	
 	/**
@@ -42,9 +42,9 @@
 		const CALLBACK_DEDUCE_CONTINENT = 1;
 		
 		/**
-		* Thrush_Cache Pointer to a Thrush_Cache object
+		* Thrush_WebPageLoader Pointer to a Thrush_WebPageLoader object
 		*/
-		protected $cache = null;
+		protected $webPageLoader = null;
 		
 		/**
 		* string Email address to reach website owner in case Nominatim needs to do it
@@ -54,19 +54,19 @@
 		/**
 		* Constructor.
 		*
-		* \param Thrush_Cache $cache
-		*   Nominatim requires use of a Cache
+		* \param Thrush_WebPageLoader $webPageLoader
+		*   Nominatim requires use of a WebPageLoader
 		* \param string $email
 		*   Email of someone to contact in case Nominatim need it
 		*
-		* \throws Thrush_Exception If no cache is provided
+		* \throws Thrush_Exception If no WebPageLoader is provided
 		* \throws Thrush_Exception If the email is not valid
 		*/
-		function __construct(Thrush_Cache $cache, string $email)
+		function __construct(Thrush_WebPageLoader $webPageLoader, string $email)
 		{
-			if(is_null($cache))
+			if(is_null($webPageLoader))
 			{
-				throw new Thrush_Exception('Error', 'A Cache is mandatory to query Nominatim server');
+				throw new Thrush_Exception('Error', 'A WebPageLoader is mandatory to query Nominatim server');
 			}
 			
 			if(is_null($email) || filter_var($email, FILTER_VALIDATE_EMAIL) === false)
@@ -74,7 +74,7 @@
 				throw new Thrush_Exception('Error', 'An email is requested to query Nominatim server');
 			}
 			
-			$this->cache = $cache;
+			$this->webPageLoader = $webPageLoader;
 			$this->email = $email;
 		}
 		
@@ -176,7 +176,7 @@
 			try
 			{
 				// Fetch data
-				$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?'.$queryString, null, $key, Thrush_Cache::LIFE_IMMORTAL, '', array(array($this, 'addressArrayCallback'), $flags));
+				$data = $this->webPageLoader->loadURL($endpointUrl.'?'.$queryString, null, $key, Thrush_Cache::LIFE_IMMORTAL, '', array(array($this, 'addressArrayCallback'), $flags), null);
 				
 				return json_decode($data, true);
 			}
@@ -235,7 +235,7 @@
 			try
 			{
 				// Fetch data
-				$data = $this->cache->loadURLFromWebOrCache('nominatim', $endpointUrl.'?'.$queryString, null, $key, Thrush_Cache::LIFE_IMMORTAL, '', array(array($this, 'addressCallback'), $flags));
+				$data = $this->webPageLoader->loadURL($endpointUrl.'?'.$queryString, null, $key, Thrush_Cache::LIFE_IMMORTAL, '', array(array($this, 'addressCallback'), $flags), null);
 			
 				return json_decode($data, true);
 			}
