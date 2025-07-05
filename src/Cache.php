@@ -112,6 +112,16 @@
 		protected $time = null;
 		
 		/**
+		* int Timeout when loading an URL for the connect phase (in ms, see CURLOPT_CONNECTTIMEOUT_MS)
+		*/
+		protected $urlConnectTimeout = 5000;
+		
+		/**
+		* int Timeout when loading an URL for the whole operation (in ms, see CURLOPT_TIMEOUT_MS)
+		*/
+		protected $urlTimeout = 10000;
+		
+		/**
 		* Initialize a given type of cache.
 		*
 		* \param string $type
@@ -124,9 +134,9 @@
 			$this->typeModes[$type] = array(
 				$this->defaultMode, 
 				$this->defaultSemaphore, 
-				0, 
+				0,  // Number of call operations
 				$this->defaultEnabled,
-				null,
+				null, // cUrl ressource
 				0, 	// Number of save operations
 				0 	// Number of load operations
 				);
@@ -134,6 +144,8 @@
 		
 		/**
 		* Set mode for a given type of cache.
+		*
+		* \deprecated This method will be removed in a following release, use the class WebPageLoader instead
 		*
 		* \param int $mode
 		*   Mode to assign
@@ -425,6 +437,8 @@
 		* Example 1: array('queryCallback', $var1, $var2) will call queryCallback(&$data, $var1, $var2)
 		* Example 2: array(array($this, 'queryCallback'), $var1, $var2) will call $this->queryCallback(&$data, $var1, $var2)
 		* 
+		* \deprecated This method will be removed in a following release, use the class WebPageLoader instead
+		*
 		* \param string $type
 		*   Name of the cache to use
 		* \param string $url
@@ -526,6 +540,8 @@
 					curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 					curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
 					curl_setopt($curl, CURLOPT_USERAGENT, $this->websiteName.' ('.$this->websiteURL.')');
+					curl_setopt($curl, CURLOPT_CONNECTTIMEOUT_MS, $this->urlConnectTimeout);
+					curl_setopt($curl, CURLOPT_TIMEOUT_MS, $this->urlTimeout);
 					
 					$this->typeModes[$type][4] = $curl;
 				}
