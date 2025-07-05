@@ -97,7 +97,7 @@
 			// First we try to find the tag in preferred language if required
 			if($preferredLanguage)
 			{
-				foreach($this->base->getLanguages() as $l)
+				foreach($this->base->getPreferredLanguages() as $l)
 				{
 					if(array_key_exists($key.':'.$l, $this->tags))
 					{
@@ -156,8 +156,11 @@
 			return $this->center;
 		}
 		
-		abstract function getBorder();
 		abstract function getBoundingBox();
+		function getGeojsonGeometryAsLines()
+		{
+			return array();
+		}
 		
 		function getName()
 		{
@@ -174,6 +177,8 @@
 					$ret = str_replace($operator[1].' - ', '', $ret);
 					$ret = str_replace($operator[1].', ', '', $ret);
 					
+					$operator[1] = str_replace('/', '\/', $operator[1]);
+					
 					$pattern = '/'.$operator[1].' \((.*)\)/i';
 					$replacement = '$1';
 					$ret = preg_replace($pattern, $replacement, $ret);
@@ -183,6 +188,18 @@
 			}
 			
 			return '';
+		}
+		
+		function getNonEmptyName()
+		{
+			$name = $this->getName();
+			
+			if($name === '')
+			{
+				$name = $this->getUid();
+			}
+			
+			return $name;
 		}
 		
 		function getAltNames()
@@ -200,7 +217,7 @@
 		
 		function getWebsite()
 		{
-			$ret = $this->getTag('website');
+			$ret = $this->getTag('website', false);
 			
 			if(!is_null($ret))
 				return $ret[1];
@@ -223,6 +240,25 @@
 				{
 					if(array_key_exists('tags', $e))
 						$this->resetTags($e['tags']);
+					
+					// If a center is available we load it
+					// Otherwise it will be computed on demand
+					if(array_key_exists('center', $e))
+					{
+						//echo '$';
+						$this->center = $e['center'];
+					}
+					
+					// If a bbox is available we load it
+					// Otherwise it will be computed on demand
+					if(array_key_exists('bounds', $e))
+					{
+						//echo '$';
+						$this->bbox = array(
+							array($e['bounds']['minlon'], $e['bounds']['minlat']),
+							array($e['bounds']['maxlon'], $e['bounds']['maxlat'])
+							);
+					}
 					
 					foreach($e['members'] as $member)
 					{
@@ -250,19 +286,34 @@
 			$this->members[] = $obj;
 		}
 		
-		function getBorder()
+		function getGeojsonGeometryAsLines()
 		{
-			if(is_null($this->border))
+			$coordinates = array();
+			$this->appendGeojsonCoordinates($coordinates);
+			
+			$ret = array(
+				"type"=> "MultiLineString",
+				"coordinates"=> $coordinates
+				);
+			
+			return $ret;
+		}
+		
+		function appendGeojsonCoordinates(&$coordinates)
+		{
+			// To do: https://www.openstreetmap.org/relation/8090912
+			// To do: https://www.openstreetmap.org/relation/317711
+			foreach($this->members as $member)
 			{
-				$this->border = array();
-				
-				foreach($this->members as $member)
+				if($member->getType() === 'way')
 				{
-					$this->border = array_merge($this->border, $member->getBorder());
+					$coordinates[] = $member->getGeojsonCoordinates();
+				}
+				else if($member->getType() === 'relation')
+				{
+					$member->appendGeojsonCoordinates($coordinates);
 				}
 			}
-			
-			return $this->border;
 		}
 		
 		function getBoundingBox()
@@ -310,6 +361,25 @@
 				{
 					if(array_key_exists('tags', $e))
 						$this->resetTags($e['tags']);
+			
+					// If a center is available we load it
+					// Otherwise it will be computed on demand
+					if(array_key_exists('center', $e))
+					{
+						//echo '$';
+						$this->center = $e['center'];
+					}
+					
+					// If a bbox is available we load it
+					// Otherwise it will be computed on demand
+					if(array_key_exists('bounds', $e))
+					{
+						//echo '$';
+						$this->bbox = array(
+							array($e['bounds']['minlon'], $e['bounds']['minlat']),
+							array($e['bounds']['maxlon'], $e['bounds']['maxlat'])
+							);
+					}
 					
 					foreach($e['nodes'] as $nodeId)
 					{
@@ -326,22 +396,26 @@
 			$this->nodes[] = $node;
 		}
 		
-		function getBorder()
+		function getGeojsonGeometryAsLines()
 		{
-			if(is_null($this->border))
+			$ret = array(
+				"type"=> "LineString",
+				"coordinates"=> $this->getGeojsonCoordinates()
+				);
+			
+			return $ret;
+		}
+		
+		function getGeojsonCoordinates()
+		{
+			$ret = array();
+			
+			foreach($this->nodes as $node)
 			{
-				$this->border = array();
-				
-				// 1 way = 1 polygon
-				$polygon = array();
-				foreach($this->nodes as $node)
-				{
-					$polygon[] = $node->getCenter();
-				}
-				$this->border[] = $polygon;
+				$ret[] = $node->getCenter();
 			}
 			
-			return $this->border;
+			return $ret;
 		}
 		
 		function getBoundingBox()
@@ -400,24 +474,18 @@
 			}
 		}
 		
-		function getBorder()
+		function getCenter()
 		{
-			if(is_null($this->border))
-			{
-				$this->border[] = array($this->getCenter());
-			}
-			
-			return $this->border;
+			return $this->center;
 		}
 		
 		function getBoundingBox()
 		{
 			if(is_null($this->bbox))
 			{
-				$coord = $this->getCenter();
 				$this->bbox = array(
-					$coord, 
-					$coord);
+					$this->center, 
+					$this->center);
 			}
 			
 			return $this->bbox;

@@ -30,59 +30,204 @@
 	 * \license   https://opensource.org/licenses/MIT     MIT License
 	 */
 	
-	require_once __DIR__.'/../Cache.php';
 	require_once __DIR__.'/../Exception.php';
+	require_once __DIR__.'/../WebPageLoader.php';
 	require_once __DIR__.'/../Misc/OsmObjects.php';
 	require_once __DIR__.'/Nominatim.php';
 	
+	// To do:
+	// callback: Would be better to not decode, encode then decode
 	class Thrush_API_OpenStreetMap
 	{
-		protected $cache = null;
-		protected $languages = array('en');
+		/**
+		* Flag used when querying a Way or Relation to remove from the data everything not linked to the geometry
+		* (e.g. timestamp, version, changeset, user, uid...)
+		*/
+		const CALLBACK_KEEP_ONLY_GEOMETRY = 1;
 		
-		function __construct(Thrush_Cache $cache, array $languages)
+		/**
+		* Flag used when querying a Way or Relation to determine the center of the object
+		*/
+		const CALLBACK_COMPUTE_CENTER = 2;
+		
+		/**
+		* Flag used when querying a Way or Relation to determine the bouding box of the object
+		*/
+		const CALLBACK_COMPUTE_BBOX = 4;
+		
+		/**
+		* Thrush_WebPageLoader Pointer to a Thrush_WebPageLoader object
+		*/
+		protected $webPageLoader = null;
+		
+		/**
+		*   array Array of ISO 639-1 preferred language codes
+		*/
+		protected $preferredLanguages = array();
+		
+		/**
+		* Constructor.
+		*
+		* \param Thrush_WebPageLoader $webPageLoader
+		*   Nominatim requires use of a WebPageLoader
+		* \param array $preferredLanguages
+		*   Array of ISO 639-1 language codes
+		*
+		* \throws Thrush_Exception If no WebPageLoader is provided
+		*/
+		function __construct(Thrush_WebPageLoader $webPageLoader, array $preferredLanguages)
 		{
-			if(is_null($cache))
+			if(is_null($webPageLoader))
 			{
-				throw new Thrush_Exception('Error', 'A Cache is mandatory to query OSM server');
+				throw new Thrush_Exception('Error', 'A WebPageLoader is mandatory to query OSM server');
 			}
 			
-			$this->cache = $cache;
+			$this->webPageLoader = $webPageLoader;
 			
-			if(!in_array('en', $languages))
-				$languages[] = 'en';
-			
-			$this->languages = array();
-			foreach($languages as $l)
+			// We define the preferred languages when querying for tags
+			$this->preferredLanguages = array();
+			foreach($preferredLanguages as $l)
 			{
 				if($l != '')
 				{
-					$this->languages[] = $l;
+					$this->preferredLanguages[] = $l;
 				}
 			}
 		}
 		
-		public function getLanguages()
+		/**
+		* Get the preferred languages when querying for tags.
+		*
+		* \return array
+		*   An array of ISO 639-1 preferred language codes
+		*/
+		public function getPreferredLanguages()
 		{
-			return $this->languages;
+			return $this->preferredLanguages;
+		}
+		
+		/**
+		* Callback to apply some preprocessing on the result for a way.
+		*
+		* \param string $data
+		*   The data to preprocess
+		* \param int $id
+		*   Identifier of the way
+		* \param int $flags
+		*   Set of Callback flags to apply to the results
+		*/
+		public function queryWayCallback(string &$data, string $id, int $flags=0)
+		{
+			if($flags !== 0)
+			{
+				$tmpData = json_decode($data, true);
+				
+				$way = new Thrush_API_OpenStreetMap_Way($id, $tmpData, $this);
+				foreach($tmpData['elements'] as &$e)
+				{
+					if($e['type'] === 'way' && $e['id'] == $id)
+					{
+						if($flags & self::CALLBACK_COMPUTE_CENTER)
+						{
+							$e['center'] = $way->getCenter();
+						}
+						
+						if($flags & self::CALLBACK_COMPUTE_BBOX)
+						{
+							// We use OverPass format to store bounding box for compatibility purposes
+							$bbox = $way->getBoundingBox();
+							$e['bounds'] = array(
+								'minlat' => $bbox[0][1],
+								'minlon' => $bbox[0][0],
+								'maxlat' => $bbox[1][1],
+								'maxlon' => $bbox[1][0]
+							);
+						}
+					}
+					
+					if($flags & self::CALLBACK_KEEP_ONLY_GEOMETRY)
+					{
+						unset($e['timestamp']);
+						unset($e['version']);
+						unset($e['changeset']);
+						unset($e['user']);
+						unset($e['uid']);
+					}
+				}
+				
+				$data = json_encode($tmpData);
+			}
+		}
+		
+		/**
+		* Callback to apply some preprocessing on the result for a relation.
+		*
+		* \param string $data
+		*   The data to preprocess
+		* \param int $id
+		*   Identifier of the relation
+		* \param int $flags
+		*   Set of Callback flags to apply to the results
+		*/
+		public function queryRelationCallback(string &$data, string $id, int $flags=0)
+		{
+			if($flags !== 0)
+			{
+				$tmpData = json_decode($data, true);
+				
+				$relation = new Thrush_API_OpenStreetMap_Relation($id, $tmpData, $this);
+				foreach($tmpData['elements'] as &$e)
+				{
+					if($e['type'] === 'relation' && $e['id'] == $id)
+					{
+						if($flags & self::CALLBACK_COMPUTE_CENTER)
+						{
+							$e['center'] = $relation->getCenter();
+						}
+						
+						if($flags & self::CALLBACK_COMPUTE_BBOX)
+						{
+							// We use OverPass format to store bounding box for compatibility purposes
+							$bbox = $relation->getBoundingBox();
+							$e['bounds'] = array(
+								'minlat' => $bbox[0][1],
+								'minlon' => $bbox[0][0],
+								'maxlat' => $bbox[1][1],
+								'maxlon' => $bbox[1][0]
+							);
+						}
+					}
+					
+					if($flags & self::CALLBACK_KEEP_ONLY_GEOMETRY)
+					{
+						unset($e['timestamp']);
+						unset($e['version']);
+						unset($e['changeset']);
+						unset($e['user']);
+						unset($e['uid']);
+					}
+				}
+				
+				$data = json_encode($tmpData);
+			}
 		}
 		
 		/**
 		* Query OpenStreetMap server for all data about a node.
 		*
-		* \param int $id
+		* \param string $id
 		*   Identifier of the node
 		*
 		* \return Thrush_OpenStreetMap_Relation|null
 		*   A Thrush_OpenStreetMap_Node object or null
 		*/
-		public function queryNode($id)
+		public function queryNode(string $id)
 		{
 			$endpointUrl = 'https://api.openstreetmap.org/api/0.6/';
 			
 			try
 			{
-				$data = json_decode($this->cache->loadURLFromWebOrCache('osm', $endpointUrl.'node/'.$id.'.json', null, 'n'.$id.'.json', Thrush_Cache::LIFE_IMMORTAL), true);
+				$data = $this->webPageLoader->loadURLAsJSONAssociative($endpointUrl.'node/'.$id.'.json', null, 'n'.$id.'.json', Thrush_Cache::LIFE_IMMORTAL, '', null, null);
 				
 				if(!is_null($data))
 				{
@@ -100,19 +245,21 @@
 		/**
 		* Query OpenStreetMap server for all data about a way.
 		*
-		* \param int $id
+		* \param string $id
 		*   Identifier of the way
+		* \param int $flags
+		*   Set of Callback flags to apply to the results
 		*
 		* \return Thrush_OpenStreetMap_Relation|null
 		*   A Thrush_OpenStreetMap_Way object or null
 		*/
-		public function queryWay($id)
+		public function queryWay(string $id, int $flags=0)
 		{
 			$endpointUrl = 'https://api.openstreetmap.org/api/0.6/';
 			
 			try
 			{
-				$data = json_decode($this->cache->loadURLFromWebOrCache('osm', $endpointUrl.'way/'.$id.'/full.json', null, 'w'.$id.'.json', Thrush_Cache::LIFE_IMMORTAL), true);
+				$data = $this->webPageLoader->loadURLAsJSONAssociative($endpointUrl.'way/'.$id.'/full.json', null, 'w'.$id.'.json', Thrush_Cache::LIFE_IMMORTAL, '', array(array($this, 'queryWayCallback'), $id, $flags), null);
 				
 				if(!is_null($data))
 				{
@@ -130,19 +277,21 @@
 		/**
 		* Query OpenStreetMap server for all data about a relation.
 		*
-		* \param int $id
+		* \param string $id
 		*   Identifier of the relation
+		* \param int $flags
+		*   Set of Callback flags to apply to the results
 		*
 		* \return Thrush_OpenStreetMap_Relation|null
 		*   A Thrush_OpenStreetMap_Relation object or null
 		*/
-		public function queryRelation($id)
+		public function queryRelation(string $id, int $flags=0)
 		{
 			$endpointUrl = 'https://api.openstreetmap.org/api/0.6/';
 			
 			try
 			{
-				$data = json_decode($this->cache->loadURLFromWebOrCache('osm', $endpointUrl.'relation/'.$id.'/full.json', null, 'r'.$id.'.json', Thrush_Cache::LIFE_IMMORTAL), true);
+				$data = $this->webPageLoader->loadURLAsJSONAssociative($endpointUrl.'relation/'.$id.'/full.json', null, 'r'.$id.'.json', Thrush_Cache::LIFE_IMMORTAL, '', array(array($this, 'queryRelationCallback'), $id, $flags), null);
 				
 				if(!is_null($data))
 				{
