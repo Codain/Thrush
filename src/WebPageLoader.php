@@ -587,5 +587,51 @@
 			
 			return $dom;
 		}
+		
+		/**
+		* Wrapper of the method loadURL to fetch data from a given URL, either from Web or cache, load as JSON and return as a JSON Associative Array.
+		* 
+		* Refer to the documentation of the method loadURL for parameters and Exceptions.
+		* 
+		* \return array|null
+		*   JSON Associative Array or null if it cannot be parsed
+		*
+		* \see loadURL()
+		*/
+		public function loadURLAsJSONAssociative(string $url, ?array $postData, ?string $key, int $life=Thrush_Cache::LIFE_IMMORTAL, string $pwd='', array $callback=null, array $additionalHeaders=null)
+		{
+			// Because this class cannot decompress data, we force the header "Accept-Encoding" to "identity"
+			if(is_null($additionalHeaders))
+				$additionalHeaders = array();
+			$additionalHeaders[] = 'Accept-Encoding: identity';
+			
+			// Load the URL
+			$content = $this->loadURL($url, $postData, $key, $life, $pwd, $callback, $additionalHeaders);
+			
+			return json_decode($content, true);
+		}
+		
+		/**
+		* Wrapper of the method loadURL to fetch data from a given URL, either from Web or cache, load as JSON and return as a JSON Objects.
+		* 
+		* Refer to the documentation of the method loadURL for parameters and Exceptions.
+		* 
+		* \return array|null
+		*   JSON Objects or null if it cannot be parsed
+		*
+		* \see loadURL()
+		*/
+		public function loadURLAsJSONObjects(string $url, ?array $postData, ?string $key, int $life=Thrush_Cache::LIFE_IMMORTAL, string $pwd='', array $callback=null, array $additionalHeaders=null)
+		{
+			// Because this class cannot decompress data, we force the header "Accept-Encoding" to "identity"
+			if(is_null($additionalHeaders))
+				$additionalHeaders = array();
+			$additionalHeaders[] = 'Accept-Encoding: identity';
+			
+			// Load the URL
+			$content = $this->loadURL($url, $postData, $key, $life, $pwd, $callback, $additionalHeaders);
+			
+			return json_decode($content, false);
+		}
 	}
 ?>
