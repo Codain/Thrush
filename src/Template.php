@@ -709,7 +709,7 @@
 		public function setFilesForHandles(array $filenameArray, string $mode='', string $cacheKey='', int $cacheDuration=0)
 		{
 			reset($filenameArray);
-			while(list($handle, $filename) = each($filenameArray))
+			foreach($filenameArray as $handle => $filename)
 			{
 				$this->setFileForHandle($handle, $filename, $mode, $cacheKey, $cacheDuration);
 			}
