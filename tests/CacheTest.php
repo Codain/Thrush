@@ -147,7 +147,7 @@
 			
 			// First test: Callback in global scope
 			$testString = __DIR__;
-			$ret = $cache->loadURLFromWebOrCache($type, 'https://httpstat.us/200', null, '200', Thrush_Cache::LIFE_IMMORTAL, '', array('cacheCallback', $testString));
+			$ret = $cache->loadURLFromWebOrCache($type, 'https://http.codes/200', null, '200', Thrush_Cache::LIFE_IMMORTAL, '', array('cacheCallback', $testString));
 			
 			$this->assertEquals(
 				$ret,
@@ -156,7 +156,7 @@
 			
 			// Second test: Callback in class scope
 			$testString = __FILE__;
-			$ret = $cache->loadURLFromWebOrCache($type, 'https://httpstat.us/200', null, '200', Thrush_Cache::LIFE_IMMORTAL, '', array(array($this, 'cacheCallback'), $testString));
+			$ret = $cache->loadURLFromWebOrCache($type, 'https://http.codes/200', null, '200', Thrush_Cache::LIFE_IMMORTAL, '', array(array($this, 'cacheCallback'), $testString));
 			
 			$this->assertEquals(
 				$ret,
@@ -173,7 +173,7 @@
 			
 			$this->expectException(Thrush_CurlHttpException::class);
 			
-			$cache->loadURLFromWebOrCache($type, 'https://httpstat.us/404', null, '404', Thrush_Cache::LIFE_IMMORTAL, '', null);
+			$cache->loadURLFromWebOrCache($type, 'https://http.codes/404', null, '404', Thrush_Cache::LIFE_IMMORTAL, '', null);
 		}
 		
 		public function testHttpError500()
@@ -185,7 +185,7 @@
 			
 			$this->expectException(Thrush_CurlHttpException::class);
 			
-			$cache->loadURLFromWebOrCache($type, 'https://httpstat.us/500', null, '500', Thrush_Cache::LIFE_IMMORTAL, '', null);
+			$cache->loadURLFromWebOrCache($type, 'https://http.codes/500', null, '500', Thrush_Cache::LIFE_IMMORTAL, '', null);
 		}
 	}
 ?>
