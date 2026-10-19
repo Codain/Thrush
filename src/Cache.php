@@ -418,7 +418,7 @@
 		* \param string $key
 		*   Key associated to the data
 		* \param string $pwd
-		*   Password to encrypt data, if required
+		*   Password to decrypt data, if required
 		* 
 		* \return string
 		*   Data loaded
@@ -777,12 +777,23 @@
 		* 
 		* \return bool
 		*   True if there is no error, false otherwise
+		*
+		* \see remove()
 		*/
 		abstract public function move(string $fromType, string $fromKey, string $toType, string $toKey);
 		
 		/**
 		* Store some data in cache, encrypting them if needed.
 		* This method calls the implementation specific saveInc() method.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* \param string $data
+		*   Data to store
+		* \param string $pwd
+		*   Password to encrypt data, if required
 		* 
 		* \return bool
 		*   True if there is no error, false otherwise
@@ -817,9 +828,7 @@
 		* \return bool
 		*   True if there is no error, false otherwise
 		*
-		* \see exists()
-		* \see load()
-		* \see remove()
+		* \see save()
 		*/
 		abstract protected function saveInc(string $type, string $key, string &$data);
 	}
@@ -1074,6 +1083,8 @@
 		* 
 		* \return bool
 		*   True if there is no error, false otherwise
+		*
+		* \see remove()
 		*/
 		public function move(string $fromType, string $fromKey, string $toType, string $toKey)
 		{
@@ -1095,15 +1106,13 @@
 		*   Name of the cache to use
 		* \param string $key
 		*   Key associated to the data
-		* \param mixed $data
+		* \param string $data
 		*   Data to store
 		* 
 		* \return bool
 		*   True if there is no error, false otherwise
 		*
-		* \see exists()
-		* \see load()
-		* \see remove()
+		* \see save()
 		*/
 		protected function saveInc(string $type, string $key, string &$data)
 		{
