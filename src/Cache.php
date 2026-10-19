@@ -374,8 +374,7 @@
 		abstract public function clear(string $type, string $glob='');
 		
 		/**
-		* get if a data is stored in the cache and if it has not expired.
-		* If variable \c $_GET['recalcul'] is set, this function returns always \c false.
+		* Get if a data is stored in the cache and if it has not expired.
 		* 
 		* \return bool
 		*   True if there is no error, false otherwise
@@ -386,10 +385,10 @@
 		abstract public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL);
 		
 		/**
-		* Get creation date of last loaded data.
+		* Get creation date of a stored data.
 		* 
-		* \return int
-		*   Unix timestamp
+		* \return int|null
+		*   Unix timestamp or null if the data is not found in the cache
 		*/
 		abstract public function getCreationTime(string $type, string $key);
 		
@@ -411,20 +410,84 @@
 		}
 		
 		/**
-		* Retrieve data from cache.
+		* Retrieve data from cache, decrypting them if needed.
+		* This method calls the implementation specific loadInc() method.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* \param string $pwd
+		*   Password to encrypt data, if required
 		* 
 		* \return string
 		*   Data loaded
 		*
-		* \see chargerUrl()
 		* \see exists()
+		* \see loadInc()
 		* \see save()
 		* \see remove()
 		*
 		* \throws Thrush_Exception If password provided is incorrect or if data are encrypted and no password is provided
 		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
 		*/
-		abstract public function load(string $type, string $key, string $pwd='');
+		public function load(string $type, string $key, string $pwd='')
+		{
+			// Reset last date
+			$this->lastDate = null;
+			$this->lastDateType = $type;
+			$this->lastDateKey = $key;
+			
+			// Retrieve the data
+			$data = $this->loadInc($type, $key);
+			
+			$this->getMode($type);
+			$this->typeModes[$type][6]++;
+			
+			// Extract mode and data
+			$mode = mb_substr($data, 0, 5);
+			
+			// If data is encrypted, decrypt them
+			if($mode === 'CRYPT')
+			{
+				if($pwd !== '')
+				{
+					$data = mb_substr($data, 5);
+					
+					Thrush_Crypt::decrypt($data, $pwd);
+					
+					if(mb_substr($data, 0, 16) !== $this->pwdCheck)
+					{
+						$data = '';
+						throw new Thrush_Exception('Error', 'Password incorrect');
+					}
+					
+					$data = mb_substr($data, 16);
+				}
+				else
+				{
+					throw new Thrush_Exception('Error', 'Data requested is crypted');
+				}
+			}
+			else if($mode === 'CLEAR')
+			{
+				$data = mb_substr($data, 5);
+			}
+			
+			return $data;
+		}
+		
+		/**
+		* Implementation specific method to retrieve some data from cache.
+		* 
+		* \return string
+		*   Data loaded
+		*
+		* \see load()
+		*
+		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
+		*/
+		abstract protected function loadInc(string $type, string $key);
 		
 		/**
 		* Fetch data from a given URL, either from Web or cache.
@@ -718,7 +781,38 @@
 		abstract public function move(string $fromType, string $fromKey, string $toType, string $toKey);
 		
 		/**
-		* Store some data in cache.
+		* Store some data in cache, encrypting them if needed.
+		* This method calls the implementation specific saveInc() method.
+		* 
+		* \return bool
+		*   True if there is no error, false otherwise
+		*
+		* \see exists()
+		* \see load()
+		* \see remove()
+		* \see saveInc()
+		*/
+		public function save(string $type, string $key, string &$data, string $pwd='')
+		{
+			$this->getMode($type);
+			$this->typeModes[$type][5]++;
+			
+			if($pwd !== '')
+			{
+				$data2 = $this->pwdCheck.$data;
+				Thrush_Crypt::encrypt($data2, $pwd);
+				$data2 = 'CRYPT'.$data2;
+			}
+			else
+			{
+				$data2 = 'CLEAR'.$data;
+			}
+			
+			return $this->saveInc($type, $key, $data2);
+		}
+		
+		/**
+		* Implementation specific method to store some data in cache.
 		* 
 		* \return bool
 		*   True if there is no error, false otherwise
@@ -727,7 +821,7 @@
 		* \see load()
 		* \see remove()
 		*/
-		abstract public function save(string $type, string $key, string &$data, string $pwd='');
+		abstract protected function saveInc(string $type, string $key, string &$data);
 	}
 	
 	/**
@@ -852,8 +946,7 @@
 		}
 		
 		/**
-		* get if a data is stored in the cache and if it has not expired.
-		* If variable \c $_GET['recalcul'] is set, this function returns always \c false.
+		* Get if a data is stored in the cache and if it has not expired.
 		* 
 		* \param string $type
 		*   Name of the cache to use
@@ -890,15 +983,15 @@
 		}
 		
 		/**
-		* Get creation date of last loaded data.
+		* Get creation date of a stored data.
 		* 
 		* \param string $type
 		*   Name of the cache to use
 		* \param string $key
 		*   Key associated to the data
 		* 
-		* \return int
-		*   Unix timestamp
+		* \return int|null
+		*   Unix timestamp or null if the data is not found in the cache
 		*/
 		public function getCreationTime(string $type, string $key)
 		{
@@ -912,67 +1005,25 @@
 		*   Name of the cache to use
 		* \param string $key
 		*   Key associated to the data
-		* \param string $pwd
-		*   Password to encrypt data, if required
 		* 
 		* \return string
 		*   Data loaded
 		*
-		* \see chargerUrl()
 		* \see exists()
 		* \see save()
 		* \see remove()
 		*
-		* \throws Thrush_Exception If password provided is incorrect or if data are encrypted and no password is provided
 		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
 		*/
-		public function load(string $type, string $key, string $pwd='')
+		protected function loadInc(string $type, string $key)
 		{
-			// Reset last date
-			$this->lastDate = null;
-			$this->lastDateType = $type;
-			$this->lastDateKey = $key;
-			
 			$data = '';
 			$fullpath = $this->getFullPath($type, $key);
 			
 			// Load from file only if exists
 			if(file_exists($fullpath))
 			{
-				$this->getMode($type);
-				$this->typeModes[$type][6]++;
-				
 				$data = file_get_contents($fullpath);
-				
-				// Extract mode and data
-				$mode = mb_substr($data, 0, 5);
-				
-				// If data is encrypted, decrypt them
-				if($mode === 'CRYPT')
-				{
-					if($pwd !== '')
-					{
-						$data = mb_substr($data, 5);
-						
-						Thrush_Crypt::decrypt($data, $pwd);
-						
-						if(mb_substr($data, 0, 16) !== $this->pwdCheck)
-						{
-							$data = '';
-							throw new Thrush_Exception('Error', 'Password incorrect');
-						}
-						
-						$data = mb_substr($data, 16);
-					}
-					else
-					{
-						throw new Thrush_Exception('Error', 'Data requested is crypted');
-					}
-				}
-				else if($mode === 'CLEAR')
-				{
-					$data = mb_substr($data, 5);
-				}
 			}
 			else
 			{
@@ -1046,8 +1097,6 @@
 		*   Key associated to the data
 		* \param mixed $data
 		*   Data to store
-		* \param string $pwd
-		*   Password to encrypt data, if required
 		* 
 		* \return bool
 		*   True if there is no error, false otherwise
@@ -1056,24 +1105,11 @@
 		* \see load()
 		* \see remove()
 		*/
-		public function save(string $type, string $key, string &$data, string $pwd='')
+		protected function saveInc(string $type, string $key, string &$data)
 		{
 			$fullPath = $this->getFullPath($type, $key);
 			
-			$this->getMode($type);
-			$this->typeModes[$type][5]++;
-			
-			if($pwd !== '')
-			{
-				$data2 = $this->pwdCheck.$data;
-				Thrush_Crypt::encrypt($data2, $pwd);
-				
-				return (file_put_contents($fullPath, 'CRYPT'.$data2) === false?false:true);
-			}
-			else
-			{
-				return (file_put_contents($fullPath, 'CLEAR'.$data) === false?false:true);
-			}
+			return (file_put_contents($fullPath, $data)!==false);
 		}
 	}
 	
