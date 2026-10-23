@@ -377,7 +377,7 @@
 		* Get if a data is stored in the cache and if it has not expired.
 		* 
 		* \return bool
-		*   True if there is no error, false otherwise
+		*   True if the data is found and not expired, false otherwise
 		*
 		* \see load()
 		* \see save()
@@ -410,7 +410,7 @@
 		}
 		
 		/**
-		* Retrieve data from cache, decrypting them if needed.
+		* Retrieve string from cache, decrypting them if needed.
 		* This method calls the implementation specific loadInc() method.
 		* 
 		* \param string $type
@@ -420,7 +420,7 @@
 		* \param string $pwd
 		*   Password to decrypt data, if required
 		* 
-		* \return string
+		* \return mixed
 		*   Data loaded
 		*
 		* \see exists()
@@ -478,7 +478,43 @@
 		}
 		
 		/**
-		* Implementation specific method to retrieve some data from cache.
+		* Retrieve data from cache.
+		* This method calls the implementation specific loadMixedInc() method.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* 
+		* \return mixed
+		*   Data loaded
+		*
+		* \see exists()
+		* \see loadInc()
+		* \see save()
+		* \see remove()
+		*
+		* \throws Thrush_Exception If password provided is incorrect or if data are encrypted and no password is provided
+		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
+		*/
+		public function loadMixed(string $type, string $key)
+		{
+			// Reset last date
+			$this->lastDate = null;
+			$this->lastDateType = $type;
+			$this->lastDateKey = $key;
+			
+			// Retrieve the data
+			$data = $this->loadMixedInc($type, $key);
+			
+			$this->getMode($type);
+			$this->typeModes[$type][6]++;
+			
+			return $data;
+		}
+		
+		/**
+		* Implementation specific method to retrieve some string from cache.
 		* 
 		* \return string
 		*   Data loaded
@@ -488,6 +524,18 @@
 		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
 		*/
 		abstract protected function loadInc(string $type, string $key);
+		
+		/**
+		* Implementation specific method to retrieve some data from cache.
+		* 
+		* \return mixed
+		*   Data loaded
+		*
+		* \see load()
+		*
+		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
+		*/
+		abstract protected function loadMixedInc(string $type, string $key);
 		
 		/**
 		* Fetch data from a given URL, either from Web or cache.
@@ -783,7 +831,7 @@
 		abstract public function move(string $fromType, string $fromKey, string $toType, string $toKey);
 		
 		/**
-		* Store some data in cache, encrypting them if needed.
+		* Store some string in cache, encrypting them if needed.
 		* This method calls the implementation specific saveInc() method.
 		* 
 		* \param string $type
@@ -802,6 +850,7 @@
 		* \see load()
 		* \see remove()
 		* \see saveInc()
+		* \see saveMixed()
 		*/
 		public function save(string $type, string $key, string &$data, string $pwd='')
 		{
@@ -823,7 +872,32 @@
 		}
 		
 		/**
-		* Implementation specific method to store some data in cache.
+		* Store some data in cache.
+		* This method calls the implementation specific saveMixedInc() method.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* \param mixed $data
+		*   Data to store
+		* 
+		* \return bool
+		*   True if there is no error, false otherwise
+		*
+		* \see save()
+		* \see saveMixedInc()
+		*/
+		public function saveMixed(string $type, string $key, &$data)
+		{
+			$this->getMode($type);
+			$this->typeModes[$type][5]++;
+			
+			return $this->saveMixedInc($type, $key, $data);
+		}
+		
+		/**
+		* Implementation specific method to store some string in cache.
 		* 
 		* \return bool
 		*   True if there is no error, false otherwise
@@ -831,6 +905,16 @@
 		* \see save()
 		*/
 		abstract protected function saveInc(string $type, string $key, string &$data);
+		
+		/**
+		* Implementation specific method to store some data in cache.
+		* 
+		* \return bool
+		*   True if there is no error, false otherwise
+		*
+		* \see saveMixed()
+		*/
+		abstract protected function saveMixedInc(string $type, string $key, &$data);
 	}
 	
 	/**
@@ -965,7 +1049,7 @@
 		*   Cache life in seconds
 		* 
 		* \return bool
-		*   True if there is no error, false otherwise
+		*   True if the data is found and not expired, false otherwise
 		*
 		* \see load()
 		* \see save()
@@ -1008,7 +1092,7 @@
 		}
 		
 		/**
-		* Retrieve data from cache.
+		* Implementation specific method to retrieve some string from cache.
 		* 
 		* \param string $type
 		*   Name of the cache to use
@@ -1040,6 +1124,41 @@
 			}
 			
 			return $data;
+		}
+		
+		/**
+		* Implementation specific method to retrieve some mixed from cache.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* 
+		* \return mixed
+		*   Data loaded
+		*
+		* \see exists()
+		* \see save()
+		* \see remove()
+		*
+		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
+		*/
+		protected function loadMixedInc(string $type, string $key)
+		{
+			$data = '';
+			$fullpath = $this->getFullPath($type, $key);
+			
+			// Load from file only if exists
+			if(file_exists($fullpath))
+			{
+				$data = file_get_contents($fullpath);
+			}
+			else
+			{
+				throw new Thrush_Cache_NoDataToLoadException();
+			}
+			
+			return unserialize($data);
 		}
 		
 		/**
@@ -1100,7 +1219,7 @@
 		}
 		
 		/**
-		* Store some data in cache.
+		* Implementation specific method to store some string in cache.
 		* 
 		* \param string $type
 		*   Name of the cache to use
@@ -1119,6 +1238,28 @@
 			$fullPath = $this->getFullPath($type, $key);
 			
 			return (file_put_contents($fullPath, $data)!==false);
+		}
+		
+		/**
+		* Implementation specific method to store some data in cache.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* \param mixed $data
+		*   Data to store
+		* 
+		* \return bool
+		*   True if there is no error, false otherwise
+		*
+		* \see save()
+		*/
+		protected function saveMixedInc(string $type, string $key, &$data)
+		{
+			$fullPath = $this->getFullPath($type, $key);
+			
+			return (file_put_contents($fullPath, serialize($data))!==false);
 		}
 	}
 	
