@@ -1263,11 +1263,288 @@
 		}
 	}
 	
+	/**
+	* This class implements a caching system using volatile memory.
+	* This means that the data will be lost once the instance is deleted.
+	*/
+	class Thrush_Cache_Volatile extends Thrush_Cache
+	{
+		/**
+		* array Memory to store the cached data. The data are stored qccording to the following schema:
+		* data[type][key] = array('t' => '...', 'd' => '...')
+		*/
+		protected $data = array();
+		
+		/**
+		* Constructor.
+		*/
+		function __construct()
+		{
+			parent::__construct('', '');
+		}
+		
+		/**
+		* Remove all data of a given cache type.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $glob
+		*   Name pattern to remove (i.e. pattern for preg_match), "" if all entries are to be removed.
+		* 
+		* \return int
+		*   Number of entries removed, -1 if error
+		*
+		* \see remove()
+		*/
+		public function clear(string $type, string $glob='')
+		{
+			$nb = -1;
+			
+			if(array_key_exists($type, $this->data))
+			{
+				if($glob !== '')
+				{
+					foreach($this->data[$type] as $key => &$value)
+					{
+						if(preg_match($glob, $key))
+						{
+							unset($this->data[$type][$key]);
+							$nb++;
+						}
+					}
+				}
+				else
+				{
+					$nb = count($this->data[$type]);
+					unset($this->data[$type]);
+				}
+			}
+			
+			return $nb;
+		}
+		
+		/**
+		* Get if a data is stored in the cache and if it has not expired.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* \param int $life
+		*   Cache life in seconds
+		* 
+		* \return bool
+		*   True if the data is found and not expired, false otherwise
+		*
+		* \see load()
+		* \see save()
+		*/
+		public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL)
+		{
+			// If data exists in the cache
+			if(array_key_exists($type, $this->data) && array_key_exists($key, $this->data[$type]))
+			{
+				// Return whether it is still valid or not
+				if($life <= 0)
+				{
+					return true;
+				}
+				else
+				{
+					return (($this->time-$this->data[$type][$key]['time']) < $life);
+				}
+			}
+			
+			return false;
+		}
+		
+		/**
+		* Get creation date of a stored data.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* 
+		* \return int|null
+		*   Unix timestamp or null if the data is not found in the cache
+		*/
+		public function getCreationTime(string $type, string $key)
+		{
+			if(array_key_exists($type, $this->data) && array_key_exists($key, $this->data[$type]))
+				return $this->data[$type][$key]['t'];
+			
+			return null;
+		}
+		
+		/**
+		* Implementation specific method to retrieve some string from cache.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* 
+		* \return string
+		*   Data loaded
+		*
+		* \see load()
+		*
+		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
+		*/
+		protected function loadInc(string $type, string $key)
+		{
+			return $this->loadMixedInc($type, $key);
+		}
+		
+		/**
+		* Implementation specific method to retrieve some data from cache.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* 
+		* \return mixed
+		*   Data loaded
+		*
+		* \see load()
+		*
+		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
+		*/
+		protected function loadMixedInc(string $type, string $key)
+		{
+			$data = '';
+			
+			// Load from file only if exists
+			if(array_key_exists($type, $this->data) && array_key_exists($key, $this->data[$type]))
+			{
+				$data = $this->data[$type][$key]['d'];
+			}
+			else
+			{
+				throw new Thrush_Cache_NoDataToLoadException();
+			}
+			
+			return $data;
+		}
+		
+		/**
+		* Remove data from cache.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* 
+		* \return bool
+		*   True if there is no error, false otherwise
+		*
+		* \see clear()
+		* \see save()
+		* \see load()
+		* \see exists()
+		*/
+		public function remove(string $type, string $key)
+		{
+			if(array_key_exists($type, $this->data) && array_key_exists($key, $this->data[$type]))
+				unset($this->data[$type]);
+			
+			return true;
+		}
+		
+		/**
+		* Move data in cache.
+		* If data does not exists, do nothing.
+		* 
+		* \param string $fromType
+		*   Name of the cache where to retrieve data
+		* \param string $fromKey
+		*   Key associated to the data to retrieve
+		* \param string $toType
+		*   New cache name to store data
+		* \param string $toKey
+		*   New key to store data
+		* 
+		* \return bool
+		*   True if there is no error, false otherwise
+		*
+		* \see remove()
+		*/
+		public function move(string $fromType, string $fromKey, string $toType, string $toKey)
+		{
+			if(array_key_exists($fromType, $this->data) && array_key_exists($fromKey, $this->data[$fromType]))
+			{
+				$this->data[$toType][$toKey] = $this->data[$fromType][$fromKey];
+				
+				return $this->remove($fromType, $fromKey);
+			}
+			
+			return false;
+		}
+		
+		/**
+		* Implementation specific method to store some string in cache.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* \param string $data
+		*   Data to store
+		* 
+		* \return bool
+		*   True if there is no error, false otherwise
+		*
+		* \see save()
+		*/
+		protected function saveInc(string $type, string $key, string &$data)
+		{
+			return $this->saveMixedInc($type, $key, $data);
+		}
+		
+		/**
+		* Implementation specific method to store some data in cache.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* \param mixed $data
+		*   Data to store
+		* 
+		* \return bool
+		*   True if there is no error, false otherwise
+		*
+		* \see save()
+		*/
+		protected function saveMixedInc(string $type, string $key, &$data)
+		{
+			if(!array_key_exists($type, $this->data))
+				$this->data[$type] = array();
+			
+			$this->data[$type][$key] = array(
+				't' => time(),
+				'd' => $data
+				);
+			
+			return true;
+		}
+	}
+	
 	class Thrush_Cache_NoDataToLoadException extends Thrush_Exception
 	{
 		function __construct()
 		{
 			parent::__construct('Error', 'Data not available in cache');
+		}
+	}
+	
+	class Thrush_Cache_TypeInvalidException extends Thrush_Exception
+	{
+		function __construct(string $typeName, string $className)
+		{
+			parent::__construct('Error', 'Type of data "'.$typeName.'" not supported by the type of cache "'.$className.'"');
 		}
 	}
 ?>

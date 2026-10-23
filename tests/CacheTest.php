@@ -289,4 +289,13 @@
 			testSaveExistsLoadRemoveInc($cache, $this);
 		}
 	}
+	
+	final class Thrush_Cache_VolatileTest extends TestCase
+	{
+		public function testSaveExistsLoadRemove()
+		{
+			$cache = new Thrush_Cache_Volatile();
+			testSaveExistsLoadRemoveInc($cache, $this);
+		}
+	}
 ?>
