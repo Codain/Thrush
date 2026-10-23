@@ -11,6 +11,155 @@
 		$data = $testString;
 	}
 	
+	function testSaveExistsLoadRemoveInc(Thrush_Cache $cache, TestCase &$tc)
+	{
+		$type = 'CacheTest';
+		$key = 'key';
+		
+		$cache->clear($type);
+		
+		// String stored as a string (no password)
+		$data = 'string';
+		$tc->assertEquals(
+			true,
+			$cache->save($type, $key, $data, '')
+		);
+		$tc->assertEquals(
+			true,
+			$cache->exists($type, $key)
+		);
+		$tc->assertEquals(
+			$data,
+			$cache->load($type, $key)
+		);
+		$tc->assertEquals(
+			true,
+			$cache->remove($type, $key)
+		);
+		$tc->assertEquals(
+			false,
+			$cache->exists($type, $key)
+		);
+		
+		// String stored as a string (with password)
+		$data = 'string';
+		$pwd = 'uuQy4CBQhRem\'H';
+		$tc->assertEquals(
+			true,
+			$cache->save($type, $key, $data, $pwd)
+		);
+		$tc->assertEquals(
+			true,
+			$cache->exists($type, $key)
+		);
+		$tc->assertEquals(
+			$data,
+			$cache->load($type, $key, $pwd)
+		);
+		$tc->assertEquals(
+			true,
+			$cache->remove($type, $key)
+		);
+		$tc->assertEquals(
+			false,
+			$cache->exists($type, $key)
+		);
+		
+		// String stored as a mixed
+		$data = 'string';
+		$tc->assertEquals(
+			true,
+			$cache->saveMixed($type, $key, $data)
+		);
+		$tc->assertEquals(
+			true,
+			$cache->exists($type, $key)
+		);
+		$tc->assertEquals(
+			$data,
+			$cache->loadMixed($type, $key)
+		);
+		$tc->assertEquals(
+			true,
+			$cache->remove($type, $key)
+		);
+		$tc->assertEquals(
+			false,
+			$cache->exists($type, $key)
+		);
+		
+		// Integer stored as a mixed
+		$data = 28;
+		$tc->assertEquals(
+			true,
+			$cache->saveMixed($type, $key, $data)
+		);
+		$tc->assertEquals(
+			true,
+			$cache->exists($type, $key)
+		);
+		$tc->assertEquals(
+			$data,
+			$cache->loadMixed($type, $key)
+		);
+		$tc->assertEquals(
+			true,
+			$cache->remove($type, $key)
+		);
+		$tc->assertEquals(
+			false,
+			$cache->exists($type, $key)
+		);
+		
+		// Array stored as a mixed
+		$data = array(1, 2, 3);
+		$tc->assertEquals(
+			true,
+			$cache->saveMixed($type, $key, $data)
+		);
+		$tc->assertEquals(
+			true,
+			$cache->exists($type, $key)
+		);
+		$tc->assertEquals(
+			$data,
+			$cache->loadMixed($type, $key)
+		);
+		$tc->assertEquals(
+			true,
+			$cache->remove($type, $key)
+		);
+		$tc->assertEquals(
+			false,
+			$cache->exists($type, $key)
+		);
+		
+		// Object stored as a mixed
+		$data = new DateTime();
+		$tc->assertEquals(
+			true,
+			$cache->saveMixed($type, $key, $data)
+		);
+		$tc->assertEquals(
+			true,
+			$cache->exists($type, $key)
+		);
+		$tc->assertEquals(
+			$data->getTimestamp(),
+			$cache->loadMixed($type, $key)->getTimestamp()
+		);
+		$tc->assertEquals(
+			true,
+			$cache->remove($type, $key)
+		);
+		$tc->assertEquals(
+			false,
+			$cache->exists($type, $key)
+		);
+		
+		$cache->clear($type);
+	}
+	
 	final class Thrush_Cache_FilesTest extends TestCase
 	{
 		public function testDirectoryDoesNotExists1()
@@ -66,82 +215,18 @@
 			);
 		}
 		
-		protected function incExistsLoadSaveRemove(string $type, string $key, string $data, string $pwd)
-		{
-			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
-			
-			$cache->enable($type);
-			$this->assertEquals(
-				true,
-				$cache->isEnabled($type)
-			);
-			
-			// At this point no dat shall exists
-			$this->assertEquals(
-				false,
-				$cache->exists($type, $key, Thrush_Cache::LIFE_IMMORTAL)
-			);
-			
-			// Add data to the cache
-			$this->assertEquals(
-				true,
-				$cache->save($type, $key, $data, $pwd)
-			);
-			
-			// At this point data shall exists
-			$this->assertEquals(
-				true,
-				$cache->exists($type, $key, Thrush_Cache::LIFE_IMMORTAL)
-			);
-			
-			// Check back data
-			$this->assertEquals(
-				$data,
-				$cache->load($type, $key, $pwd)
-			);
-			
-			// Remove data
-			$this->assertEquals(
-				true,
-				$cache->remove($type, $key)
-			);
-			
-			// At this point data shall not exists anymore
-			$this->assertEquals(
-				false,
-				$cache->exists($type, $key, Thrush_Cache::LIFE_IMMORTAL)
-			);
-		}
-		
 		public function cacheCallback(string &$data, string $testString)
 		{
 			$data = $testString;
 		}
 		
-		public function testExistsLoadSaveNoPassword()
-		{
-			$type = 'CacheTest';
-			$data = 'Some dummy data';
-			$key = 'key';
-			$pwd = ''; // No password
-			
-			$this->incExistsLoadSaveRemove($type, $key, $data, $pwd);
-		}
-		
-		public function testExistsLoadSaveWithPassword()
-		{
-			$type = 'CacheTest';
-			$data = 'Some dummy data';
-			$key = 'key';
-			$pwd = 'uuQy4CBQhRem\'H';
-			
-			$this->incExistsLoadSaveRemove($type, $key, $data, $pwd);
-		}
-		
 		public function testLoadUrlCallback()
 		{
-			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
 			$type = 'CacheTest';
+			
+			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
+			$cache->clear($type);
+			
 			$cache->disable($type);
 			$testString = ''; // A dummy variable to test callback
 			
@@ -162,30 +247,46 @@
 				$ret,
 				$testString
 			);
+			
+			$cache->clear($type);
 		}
 		
 		public function testHttpError404()
 		{
-			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
 			$type = 'CacheTest';
+			
+			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
+			$cache->clear($type);
 			
 			$cache->enable($type);
 			
 			$this->expectException(Thrush_CurlHttpException::class);
 			
 			$cache->loadURLFromWebOrCache($type, 'https://http.codes/404', null, '404', Thrush_Cache::LIFE_IMMORTAL, '', null);
+			
+			$cache->clear($type);
 		}
 		
 		public function testHttpError500()
 		{
-			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
 			$type = 'CacheTest';
+			
+			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
+			$cache->clear($type);
 			
 			$cache->enable($type);
 			
 			$this->expectException(Thrush_CurlHttpException::class);
 			
 			$cache->loadURLFromWebOrCache($type, 'https://http.codes/500', null, '500', Thrush_Cache::LIFE_IMMORTAL, '', null);
+			
+			$cache->clear($type);
+		}
+		
+		public function testSaveExistsLoadRemove()
+		{
+			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
+			testSaveExistsLoadRemoveInc($cache, $this);
 		}
 	}
 ?>
