@@ -121,6 +121,44 @@
 		*/
 		protected $urlTimeout = 10000;
 		
+		
+		
+		
+		/**
+		* Constructor.
+		* For performance reasons it is highly recommended for \c $root to be an absolute path (see \c realpath()).
+		* 
+		* \param string $websiteName
+		*   Website name, used in HTTP User-Agent attribute
+		* \param string $websiteURL
+		*   Website URL, used in HTTP User-Agent attribute
+		*/
+		function __construct(string $websiteName, string $websiteURL)
+		{
+			$this->websiteName = $websiteName;
+			$this->websiteURL = $websiteURL;
+			
+			// Initialise timestamp for all date evaluations
+			$this->time = time();
+		}
+		
+		/**
+		* Destructor.
+		*/
+		function __destruct()
+		{
+			foreach($this->typeModes as $typeMode)
+			{
+				if(!is_null($typeMode[4]))
+				{
+					curl_close($typeMode[4]);
+				}
+			}
+		}
+		
+		
+		
+		
 		/**
 		* Initialize a given type of cache.
 		*
@@ -247,6 +285,9 @@
 			return $ret;
 		}
 		
+		
+		
+		
 		/**
 		* Allow to enable a cache type.
 		*
@@ -331,58 +372,8 @@
 			$this->defaultEnabled = $defaultEnabled;
 		}
 		
-		/**
-		* Constructor.
-		* For performance reasons it is highly recommended for \c $root to be an absolute path (see \c realpath()).
-		* 
-		* \param string $websiteName
-		*   Website name, used in HTTP User-Agent attribute
-		* \param string $websiteURL
-		*   Website URL, used in HTTP User-Agent attribute
-		*/
-		function __construct(string $websiteName, string $websiteURL)
-		{
-			$this->websiteName = $websiteName;
-			$this->websiteURL = $websiteURL;
-			
-			// Initialise timestamp for all date evaluations
-			$this->time = time();
-		}
 		
-		/**
-		* Destructor.
-		*/
-		function __destruct()
-		{
-			foreach($this->typeModes as $typeMode)
-			{
-				if(!is_null($typeMode[4]))
-				{
-					curl_close($typeMode[4]);
-				}
-			}
-		}
 		
-		/**
-		* Remove all data of a given cache type.
-		* 
-		* \return int
-		*   Number of entries removed, -1 if error
-		*
-		* \see remove()
-		*/
-		abstract public function clear(string $type, string $glob='');
-		
-		/**
-		* Get if a data is stored in the cache and if it has not expired.
-		* 
-		* \return bool
-		*   True if the data is found and not expired, false otherwise
-		*
-		* \see load()
-		* \see save()
-		*/
-		abstract public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL);
 		
 		/**
 		* Get creation date of a stored data.
@@ -409,133 +400,8 @@
 			return $this->lastDate;
 		}
 		
-		/**
-		* Retrieve string from cache, decrypting them if needed.
-		* This method calls the implementation specific loadInc() method.
-		* 
-		* \param string $type
-		*   Name of the cache to use
-		* \param string $key
-		*   Key associated to the data
-		* \param string $pwd
-		*   Password to decrypt data, if required
-		* 
-		* \return mixed
-		*   Data loaded
-		*
-		* \see exists()
-		* \see loadInc()
-		* \see save()
-		* \see remove()
-		*
-		* \throws Thrush_Exception If password provided is incorrect or if data are encrypted and no password is provided
-		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
-		*/
-		public function load(string $type, string $key, string $pwd='')
-		{
-			// Reset last date
-			$this->lastDate = null;
-			$this->lastDateType = $type;
-			$this->lastDateKey = $key;
-			
-			// Retrieve the data
-			$data = $this->loadInc($type, $key);
-			
-			$this->getMode($type);
-			$this->typeModes[$type][6]++;
-			
-			// Extract mode and data
-			$mode = mb_substr($data, 0, 5);
-			
-			// If data is encrypted, decrypt them
-			if($mode === 'CRYPT')
-			{
-				if($pwd !== '')
-				{
-					$data = mb_substr($data, 5);
-					
-					Thrush_Crypt::decrypt($data, $pwd);
-					
-					if(mb_substr($data, 0, 16) !== $this->pwdCheck)
-					{
-						$data = '';
-						throw new Thrush_Exception('Error', 'Password incorrect');
-					}
-					
-					$data = mb_substr($data, 16);
-				}
-				else
-				{
-					throw new Thrush_Exception('Error', 'Data requested is crypted');
-				}
-			}
-			else if($mode === 'CLEAR')
-			{
-				$data = mb_substr($data, 5);
-			}
-			
-			return $data;
-		}
 		
-		/**
-		* Retrieve data from cache.
-		* This method calls the implementation specific loadMixedInc() method.
-		* 
-		* \param string $type
-		*   Name of the cache to use
-		* \param string $key
-		*   Key associated to the data
-		* 
-		* \return mixed
-		*   Data loaded
-		*
-		* \see exists()
-		* \see loadInc()
-		* \see save()
-		* \see remove()
-		*
-		* \throws Thrush_Exception If password provided is incorrect or if data are encrypted and no password is provided
-		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
-		*/
-		public function loadMixed(string $type, string $key)
-		{
-			// Reset last date
-			$this->lastDate = null;
-			$this->lastDateType = $type;
-			$this->lastDateKey = $key;
-			
-			// Retrieve the data
-			$data = $this->loadMixedInc($type, $key);
-			
-			$this->getMode($type);
-			$this->typeModes[$type][6]++;
-			
-			return $data;
-		}
 		
-		/**
-		* Implementation specific method to retrieve some string from cache.
-		* 
-		* \return string
-		*   Data loaded
-		*
-		* \see load()
-		*
-		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
-		*/
-		abstract protected function loadInc(string $type, string $key);
-		
-		/**
-		* Implementation specific method to retrieve some data from cache.
-		* 
-		* \return mixed
-		*   Data loaded
-		*
-		* \see load()
-		*
-		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
-		*/
-		abstract protected function loadMixedInc(string $type, string $key);
 		
 		/**
 		* Fetch data from a given URL, either from Web or cache.
@@ -583,8 +449,6 @@
 			{
 				$key = md5($url.(is_null($postData)?'':serialize($postData)));
 			}
-			
-			//echo '<span style="color: red;">CACHE: Loading type '.$type.' with URL '.$url.' (key '.$key.') and life '.$life.'</span><br />';
 			
 			// Determine wether we willl need to launch query or to return cache
 			$launchQuery = false;
@@ -806,6 +670,41 @@
 			return false;
 		}
 		
+		
+		
+		
+		/**
+		* Remove all data of a given cache type.
+		* 
+		* \return int
+		*   Number of entries removed, -1 if error
+		*
+		* \see remove()
+		*/
+		abstract public function clear(string $type, string $glob='');
+		
+		/**
+		* Get if a data is stored in the cache and if it has not expired.
+		* 
+		* \return bool
+		*   True if the data is found and not expired, false otherwise
+		*
+		* \see load()
+		* \see save()
+		*/
+		abstract public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL);
+		
+		/**
+		* Move data in cache.
+		* If data does not exists, do nothing.
+		* 
+		* \return bool
+		*   True if there is no error, false otherwise
+		*
+		* \see remove()
+		*/
+		abstract public function move(string $fromType, string $fromKey, string $toType, string $toKey);
+		
 		/**
 		* Remove data from cache.
 		* 
@@ -819,16 +718,142 @@
 		*/
 		abstract public function remove(string $type, string $key);
 
+
+
+
 		/**
-		* Move data in cache.
-		* If data does not exists, do nothing.
+		* Retrieve string from cache, decrypting them if needed.
+		* This method calls the implementation specific loadInc() method.
 		* 
-		* \return bool
-		*   True if there is no error, false otherwise
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* \param string $pwd
+		*   Password to decrypt data, if required
+		* 
+		* \return mixed
+		*   Data loaded
 		*
+		* \see exists()
+		* \see loadInc()
+		* \see save()
 		* \see remove()
+		*
+		* \throws Thrush_Exception If password provided is incorrect or if data are encrypted and no password is provided
+		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
 		*/
-		abstract public function move(string $fromType, string $fromKey, string $toType, string $toKey);
+		public function load(string $type, string $key, string $pwd='')
+		{
+			// Reset last date
+			$this->lastDate = null;
+			$this->lastDateType = $type;
+			$this->lastDateKey = $key;
+			
+			// Retrieve the data
+			$data = $this->loadInc($type, $key);
+			
+			$this->getMode($type);
+			$this->typeModes[$type][6]++;
+			
+			// Extract mode and data
+			$mode = mb_substr($data, 0, 5);
+			
+			// If data is encrypted, decrypt them
+			if($mode === 'CRYPT')
+			{
+				if($pwd !== '')
+				{
+					$data = mb_substr($data, 5);
+					
+					Thrush_Crypt::decrypt($data, $pwd);
+					
+					if(mb_substr($data, 0, 16) !== $this->pwdCheck)
+					{
+						$data = '';
+						throw new Thrush_Exception('Error', 'Password incorrect');
+					}
+					
+					$data = mb_substr($data, 16);
+				}
+				else
+				{
+					throw new Thrush_Exception('Error', 'Data requested is crypted');
+				}
+			}
+			else if($mode === 'CLEAR')
+			{
+				$data = mb_substr($data, 5);
+			}
+			
+			return $data;
+		}
+		
+		/**
+		* Implementation specific method to retrieve some string from cache.
+		* 
+		* \return string
+		*   Data loaded
+		*
+		* \see load()
+		*
+		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
+		*/
+		abstract protected function loadInc(string $type, string $key);
+		
+		
+		
+		
+		/**
+		* Retrieve data from cache.
+		* This method calls the implementation specific loadMixedInc() method.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* 
+		* \return mixed
+		*   Data loaded
+		*
+		* \see exists()
+		* \see loadInc()
+		* \see save()
+		* \see remove()
+		*
+		* \throws Thrush_Exception If password provided is incorrect or if data are encrypted and no password is provided
+		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
+		*/
+		public function loadMixed(string $type, string $key)
+		{
+			// Reset last date
+			$this->lastDate = null;
+			$this->lastDateType = $type;
+			$this->lastDateKey = $key;
+			
+			// Retrieve the data
+			$data = $this->loadMixedInc($type, $key);
+			
+			$this->getMode($type);
+			$this->typeModes[$type][6]++;
+			
+			return $data;
+		}
+		
+		/**
+		* Implementation specific method to retrieve some data from cache.
+		* 
+		* \return mixed
+		*   Data loaded
+		*
+		* \see load()
+		*
+		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
+		*/
+		abstract protected function loadMixedInc(string $type, string $key);
+		
+		
+		
 		
 		/**
 		* Store some string in cache, encrypting them if needed.
@@ -872,6 +897,19 @@
 		}
 		
 		/**
+		* Implementation specific method to store some string in cache.
+		* 
+		* \return bool
+		*   True if there is no error, false otherwise
+		*
+		* \see save()
+		*/
+		abstract protected function saveInc(string $type, string $key, string &$data);
+		
+		
+		
+		
+		/**
 		* Store some data in cache.
 		* This method calls the implementation specific saveMixedInc() method.
 		* 
@@ -895,16 +933,6 @@
 			
 			return $this->saveMixedInc($type, $key, $data);
 		}
-		
-		/**
-		* Implementation specific method to store some string in cache.
-		* 
-		* \return bool
-		*   True if there is no error, false otherwise
-		*
-		* \see save()
-		*/
-		abstract protected function saveInc(string $type, string $key, string &$data);
 		
 		/**
 		* Implementation specific method to store some data in cache.
@@ -988,6 +1016,25 @@
 			
 			return $this->root.$type.DIRECTORY_SEPARATOR.$key;
 		}
+		
+		/**
+		* Get creation date of a stored data.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* 
+		* \return int|null
+		*   Unix timestamp or null if the data is not found in the cache
+		*/
+		public function getCreationTime(string $type, string $key)
+		{
+			return filemtime($this->getFullPath($type, $key));
+		}
+		
+		
+		
 		
 		/**
 		* Remove all data of a given cache type.
@@ -1076,20 +1123,64 @@
 		}
 		
 		/**
-		* Get creation date of a stored data.
+		* Move data in cache.
+		* If data does not exists, do nothing.
+		* 
+		* \param string $fromType
+		*   Name of the cache where to retrieve data
+		* \param string $fromKey
+		*   Key associated to the data to retrieve
+		* \param string $toType
+		*   New cache name to store data
+		* \param string $toKey
+		*   New key to store data
+		* 
+		* \return bool
+		*   True if there is no error, false otherwise
+		*
+		* \see remove()
+		*/
+		public function move(string $fromType, string $fromKey, string $toType, string $toKey)
+		{
+			$oldname = $this->getFullPath($fromType, $fromKey);
+			$newname = $this->getFullPath($toType, $toKey);
+			
+			if(file_exists($oldname))
+			{
+				return rename($oldname, $newname);
+			}
+			
+			return false;
+		}
+		
+		/**
+		* Remove data from cache.
 		* 
 		* \param string $type
 		*   Name of the cache to use
 		* \param string $key
 		*   Key associated to the data
 		* 
-		* \return int|null
-		*   Unix timestamp or null if the data is not found in the cache
+		* \return bool
+		*   True if there is no error, false otherwise
+		*
+		* \see clear()
+		* \see save()
+		* \see load()
+		* \see exists()
 		*/
-		public function getCreationTime(string $type, string $key)
+		public function remove(string $type, string $key)
 		{
-			return filemtime($this->getFullPath($type, $key));
+			$fullPath = $this->getFullPath($type, $key);
+			
+			if(file_exists($fullPath))
+				return unlink($fullPath);
+			
+			return true;
 		}
+		
+		
+		
 		
 		/**
 		* Implementation specific method to retrieve some string from cache.
@@ -1161,62 +1252,8 @@
 			return unserialize($data);
 		}
 		
-		/**
-		* Remove data from cache.
-		* 
-		* \param string $type
-		*   Name of the cache to use
-		* \param string $key
-		*   Key associated to the data
-		* 
-		* \return bool
-		*   True if there is no error, false otherwise
-		*
-		* \see clear()
-		* \see save()
-		* \see load()
-		* \see exists()
-		*/
-		public function remove(string $type, string $key)
-		{
-			$fullPath = $this->getFullPath($type, $key);
-			
-			if(file_exists($fullPath))
-				return unlink($fullPath);
-			
-			return true;
-		}
 		
-		/**
-		* Move data in cache.
-		* If data does not exists, do nothing.
-		* 
-		* \param string $fromType
-		*   Name of the cache where to retrieve data
-		* \param string $fromKey
-		*   Key associated to the data to retrieve
-		* \param string $toType
-		*   New cache name to store data
-		* \param string $toKey
-		*   New key to store data
-		* 
-		* \return bool
-		*   True if there is no error, false otherwise
-		*
-		* \see remove()
-		*/
-		public function move(string $fromType, string $fromKey, string $toType, string $toKey)
-		{
-			$oldname = $this->getFullPath($fromType, $fromKey);
-			$newname = $this->getFullPath($toType, $toKey);
-			
-			if(file_exists($oldname))
-			{
-				return rename($oldname, $newname);
-			}
-			
-			return false;
-		}
+		
 		
 		/**
 		* Implementation specific method to store some string in cache.
@@ -1282,6 +1319,31 @@
 		{
 			parent::__construct('', '');
 		}
+		
+		
+		
+		
+		/**
+		* Get creation date of a stored data.
+		* 
+		* \param string $type
+		*   Name of the cache to use
+		* \param string $key
+		*   Key associated to the data
+		* 
+		* \return int|null
+		*   Unix timestamp or null if the data is not found in the cache
+		*/
+		public function getCreationTime(string $type, string $key)
+		{
+			if(array_key_exists($type, $this->data) && array_key_exists($key, $this->data[$type]))
+				return $this->data[$type][$key]['t'];
+			
+			return null;
+		}
+		
+		
+		
 		
 		/**
 		* Remove all data of a given cache type.
@@ -1359,23 +1421,61 @@
 		}
 		
 		/**
-		* Get creation date of a stored data.
+		* Move data in cache.
+		* If data does not exists, do nothing.
+		* 
+		* \param string $fromType
+		*   Name of the cache where to retrieve data
+		* \param string $fromKey
+		*   Key associated to the data to retrieve
+		* \param string $toType
+		*   New cache name to store data
+		* \param string $toKey
+		*   New key to store data
+		* 
+		* \return bool
+		*   True if there is no error, false otherwise
+		*
+		* \see remove()
+		*/
+		public function move(string $fromType, string $fromKey, string $toType, string $toKey)
+		{
+			if(array_key_exists($fromType, $this->data) && array_key_exists($fromKey, $this->data[$fromType]))
+			{
+				$this->data[$toType][$toKey] = $this->data[$fromType][$fromKey];
+				
+				return $this->remove($fromType, $fromKey);
+			}
+			
+			return false;
+		}
+		
+		/**
+		* Remove data from cache.
 		* 
 		* \param string $type
 		*   Name of the cache to use
 		* \param string $key
 		*   Key associated to the data
 		* 
-		* \return int|null
-		*   Unix timestamp or null if the data is not found in the cache
+		* \return bool
+		*   True if there is no error, false otherwise
+		*
+		* \see clear()
+		* \see save()
+		* \see load()
+		* \see exists()
 		*/
-		public function getCreationTime(string $type, string $key)
+		public function remove(string $type, string $key)
 		{
 			if(array_key_exists($type, $this->data) && array_key_exists($key, $this->data[$type]))
-				return $this->data[$type][$key]['t'];
+				unset($this->data[$type]);
 			
-			return null;
+			return true;
 		}
+		
+		
+		
 		
 		/**
 		* Implementation specific method to retrieve some string from cache.
@@ -1429,59 +1529,8 @@
 			return $data;
 		}
 		
-		/**
-		* Remove data from cache.
-		* 
-		* \param string $type
-		*   Name of the cache to use
-		* \param string $key
-		*   Key associated to the data
-		* 
-		* \return bool
-		*   True if there is no error, false otherwise
-		*
-		* \see clear()
-		* \see save()
-		* \see load()
-		* \see exists()
-		*/
-		public function remove(string $type, string $key)
-		{
-			if(array_key_exists($type, $this->data) && array_key_exists($key, $this->data[$type]))
-				unset($this->data[$type]);
-			
-			return true;
-		}
 		
-		/**
-		* Move data in cache.
-		* If data does not exists, do nothing.
-		* 
-		* \param string $fromType
-		*   Name of the cache where to retrieve data
-		* \param string $fromKey
-		*   Key associated to the data to retrieve
-		* \param string $toType
-		*   New cache name to store data
-		* \param string $toKey
-		*   New key to store data
-		* 
-		* \return bool
-		*   True if there is no error, false otherwise
-		*
-		* \see remove()
-		*/
-		public function move(string $fromType, string $fromKey, string $toType, string $toKey)
-		{
-			if(array_key_exists($fromType, $this->data) && array_key_exists($fromKey, $this->data[$fromType]))
-			{
-				$this->data[$toType][$toKey] = $this->data[$fromType][$fromKey];
-				
-				return $this->remove($fromType, $fromKey);
-			}
-			
-			return false;
-		}
+		
 		
 		/**
 		* Implementation specific method to store some string in cache.
