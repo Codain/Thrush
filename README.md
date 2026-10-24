@@ -4,6 +4,8 @@
 **Thrush** is a PHP Library bringing handy features to expand native PHP functions:
 - Currently published features:
   - Cache
+    - Using files
+    - Using volatile memory
   - Exception
   - Sitemap (generation only, as per https://www.sitemaps.org/protocol.html, no support for Sitemap Index)
   - Template
