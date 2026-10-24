@@ -1182,18 +1182,15 @@
 			// Standard PHP functions which requires to have the variable at the end (default is first one)
 			static $atEnd = array('date', 'implode');
 			
-			// Standard PHP functions which are "pure functions" (i.e. it always returns the same output for the same inputs and has no side effects)
-			static $phpPureFunctions = array(
+			// Standard PHP functions which are "pure functions" (i.e. it always returns the same output for the same inputs and has no side effects) and returning a string
+			static $phpPureFunctionsString = array(
 				'htmlspecialchars', 
 				'lcfirst', 
 				'ltrim', 
 				'md5', 
 				'nl2br', 
 				'rtrim', 
-				'strip_tags', 
-				'strlen', 
-				'strpos', 
-				'strrpos', 
+				'strip_tags',  
 				'strtolower',
 				'strtoupper',  
 				'str_replace',
@@ -1201,6 +1198,13 @@
 				'trim',
 				'ucfirst',
 				'ucwords'
+				);
+				
+			// Standard PHP functions which are "pure functions" (i.e. it always returns the same output for the same inputs and has no side effects) and returning a bool, an int or a float
+			static $phpPureFunctionsBoolIntFloat = array(
+				'strlen', 
+				'strpos', 
+				'strrpos'
 				);
 			
 			$pos = mb_strpos($str, '(');
@@ -1249,17 +1253,27 @@
 			
 			// Prepare the instruction to call the function
 			if(array_key_exists($this->themeStack[0], $this->themesLoaded) && method_exists($this->themesLoaded[$this->themeStack[0]], $functionName))
-				$str =  '$this->themesLoaded["'.$this->themeStack[0].'"]->'.$functionName.'('.implode(', ', $functionParameters).')';
-			else
-				$str =  $functionName.'('.implode(', ', $functionParameters).')';
-			
-			// For optimization purposes, if we have a pure function and we already have the values of all parameters, 
-			// we call the function now.
-			// TODO: This eval could be avoided if using call_user_func & cie?
-			// TODO: Consider other type of variables, i.e. integers, float...?
-			if(in_array($functionName, $phpPureFunctions) && self::isString($functionParameters))
 			{
-				eval('$str = \'"\'.'.$str.'.\'"\';');
+				$str =  '$this->themesLoaded["'.$this->themeStack[0].'"]->'.$functionName.'('.implode(', ', $functionParameters).')';
+			}
+			else
+			{
+				$str =  $functionName.'('.implode(', ', $functionParameters).')';
+				
+				// For optimization purposes, if we have a pure function and we already have the values of all parameters determined, we call the function now.
+				// TODO: Here only strings are accepted as parameters, accept also booleans, integers and floats.
+				if(self::isString($functionParameters))
+				{
+					if(in_array($functionName, $phpPureFunctionsString))
+					{
+						$str = '"'.call_user_func_array($functionName, $functionParameters).'"';
+					}
+					elseif(in_array($functionName, $phpPureFunctionsBoolIntFloat))
+					{
+						// TODO: Here it always convert the result to a string. Might be a problem when functions are nested.
+						$str = strval(call_user_func_array($functionName, $functionParameters));
+					}
+				}
 			}
 			
 			//printLines($str);

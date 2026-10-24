@@ -72,6 +72,7 @@
 		{
 			$template = new Thrush_Template(__DIR__.'/ressources/templates');
 			
+			// Pure functions returning a string
 			$template->setContentForHandle('body', 'Hello {WORLD|strtoupper()}!');
 			$template->setRootVariable('WORLD', 'World');
 			$res = $template->render('body', false);
@@ -79,6 +80,17 @@
 			$this->assertEquals(
 				$res,
 				'Hello WORLD!'
+			);
+			
+			// Pure functions returning an int
+			// TODO: Test also functions returning bool or float
+			$template->setContentForHandle('body', 'World: {WORLD|strlen()}');
+			$template->setRootVariable('WORLD', 'World');
+			$res = $template->render('body', false);
+			
+			$this->assertEquals(
+				$res,
+				'World: 5'
 			);
 		}
 		
