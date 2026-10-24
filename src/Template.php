@@ -1182,7 +1182,8 @@
 			// Standard PHP functions which requires to have the variable at the end (default is first one)
 			static $atEnd = array('date', 'implode');
 			
-			static $constFunctions = array(
+			// Standard PHP functions which are "pure functions" (i.e. it always returns the same output for the same inputs and has no side effects)
+			static $phpPureFunctions = array(
 				'htmlspecialchars', 
 				'lcfirst', 
 				'ltrim', 
@@ -1205,10 +1206,12 @@
 			$pos = mb_strpos($str, '(');
 			$rpos = mb_strrpos($str, ')');
 			
-			// Nom et des paramètres de la fonction
+			// Get the name and the additional parameters of the function to be called
 			$functionName = strtolower(mb_substr($str, 0, $pos));
 			$functionParameters = mb_substr($str, $pos+1, $rpos-$pos-1);
 			
+			// If at least one additional parameter is defined,
+			// prepare each of them for processing
 			$varAdded = false;
 			if($functionParameters != '')
 			{
@@ -1228,28 +1231,33 @@
 			else
 				$functionParameters = Array();
 			
-			// Cas des fonctions sans variable
+			// If the variable need to be added to the list of parameters,
+			// append the variable at the expected location in the list of parameters
 			if(!$varAdded && $var !== 'VOID')
 			{
-				// Cas des fonctions où la variable vient à la fin
+				// Append the variable at the end of the list of parameters if the function requires it
 				if(in_array($functionName, $atEnd))
 				{
 					array_push($functionParameters, $var);
 				}
-				// Sinon par défaut on met au début
+				// Otherwise append the variable at the begining of the list of parameters
 				else
 				{
 					array_unshift($functionParameters, $var);
 				}
 			}
 			
+			// Prepare the instruction to call the function
 			if(array_key_exists($this->themeStack[0], $this->themesLoaded) && method_exists($this->themesLoaded[$this->themeStack[0]], $functionName))
 				$str =  '$this->themesLoaded["'.$this->themeStack[0].'"]->'.$functionName.'('.implode(', ', $functionParameters).')';
 			else
 				$str =  $functionName.'('.implode(', ', $functionParameters).')';
 			
-			// TODO : cet eval pourrait être évité via cal_user_func & cie ?
-			if(in_array($functionName, $constFunctions) && self::isString($functionParameters))
+			// For optimization purposes, if we have a pure function and we already have the values of all parameters, 
+			// we call the function now.
+			// TODO: This eval could be avoided if using call_user_func & cie?
+			// TODO: Consider other type of variables, i.e. integers, float...?
+			if(in_array($functionName, $phpPureFunctions) && self::isString($functionParameters))
 			{
 				eval('$str = \'"\'.'.$str.'.\'"\';');
 			}
