@@ -1179,7 +1179,9 @@
 		*/
 		protected function compileFunction(string $str, string $var='VOID')
 		{
-			static $atEnd = array('date');
+			// Standard PHP functions which requires to have the variable at the end (default is first one)
+			static $atEnd = array('date', 'implode');
+			
 			static $constFunctions = array(
 				'htmlspecialchars', 
 				'lcfirst', 
