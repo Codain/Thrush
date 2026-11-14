@@ -43,14 +43,14 @@
 		*   - Retrieve from cache if available
 		*   - Otherwise, always query the host (and store in cache the result if enabled)
 		*/
-		const MODE_DEFAULT = 0;
+		public const MODE_DEFAULT = 0;
 		
 		/**
 		* Cache only:
 		*   - Retrieve from cache if available
 		*   - Otherwise, always throw an exception
 		*/
-		const MODE_CACHE_ONLY = 1;
+		public const MODE_CACHE_ONLY = 1;
 		
 		/**
 		* Default mode with limits:
@@ -58,18 +58,18 @@
 		*   - Otherwise, if the limits are not reached, query the host (and store in cache the result if enabled)
 		*   - Otherwise, always throw an exception
 		*/
-		const MODE_BUDGET = 2;
+		public const MODE_BUDGET = 2;
 		
 		/**
 		* Always query mode:
 		*   - Always query the host (and store in cache the result if enabled)
 		*/
-		const MODE_QUERY_ONLY = 3;
+		public const MODE_QUERY_ONLY = 3;
 		
 		/**
 		* Get the mode from a callback
 		*/
-		const MODE_CALLBACK = 4;
+		public const MODE_CALLBACK = 4;
 		
 		/**
 		* Thrush_Cache Pointer to a Thrush_Cache object
