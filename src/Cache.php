@@ -93,67 +93,67 @@
 		/**
 		* string Website name (used for user-agent HTTP attribute).
 		*/
-		protected $websiteName = '';
+		protected string $websiteName = '';
 		
 		/**
 		* string Website URL (used for user-agent HTTP attribute).
 		*/
-		protected $websiteURL = '';
+		protected string $websiteURL = '';
 		
 		/**
 		* DateTime Date of the last retrieved data.
 		*/
-		protected $lastDate = null;
+		protected ?DateTime $lastDate = null;
 		
 		/**
 		* string Type of the last data retrieved.
 		*/
-		protected $lastDateType = null;
+		protected ?string $lastDateType = null;
 		
 		/**
 		* string Key of the last data retrieved.
 		*/
-		protected $lastDateKey = null;
+		protected ?string $lastDateKey = null;
 		
 		/**
 		* string Hash to check password. Must be 16 characters.
 		*/
-		protected $pwdCheck = '!7+t6]3FVf7;xK#X';
+		protected string $pwdCheck = '!7+t6]3FVf7;xK#X';
 		
 		/**
 		* array Set of modes and semaphore for each type.
 		*/
-		protected $typeModes = array();
+		protected array $typeModes = array();
 		
 		/**
 		* int Default mode.
 		*/
-		protected $defaultMode = self::DefaultMode;
+		protected int $defaultMode = self::DefaultMode;
 		
 		/**
 		* int Default number of tokens when in DefaultWithLimitsMode.
 		*/
-		protected $defaultSemaphore = 10;
+		protected int $defaultSemaphore = 10;
 		
 		/**
 		* bool Default value if a cache is neither enabled nor disabled.
 		*/
-		protected $defaultEnabled = false;
+		protected bool $defaultEnabled = false;
 		
 		/**
 		* int Timestamp to evaluate item life
 		*/
-		protected $time = null;
+		protected ?int $time = null;
 		
 		/**
 		* int Timeout when loading an URL for the connect phase (in ms, see CURLOPT_CONNECTTIMEOUT_MS)
 		*/
-		protected $urlConnectTimeout = 5000;
+		protected int $urlConnectTimeout = 5000;
 		
 		/**
 		* int Timeout when loading an URL for the whole operation (in ms, see CURLOPT_TIMEOUT_MS)
 		*/
-		protected $urlTimeout = 10000;
+		protected int $urlTimeout = 10000;
 		
 		
 		
@@ -987,7 +987,7 @@
 		/**
 		* string Path to cache directory from website root.
 		*/
-		protected $root = null;
+		protected ?string $root = null;
 		
 		/**
 		* Constructor.
@@ -1344,7 +1344,7 @@
 		* array Memory to store the cached data. The data are stored qccording to the following schema:
 		* data[type][key] = array('t' => '...', 'd' => '...')
 		*/
-		protected $data = array();
+		protected array $data = array();
 		
 		/**
 		* Constructor.
