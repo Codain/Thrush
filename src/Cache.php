@@ -34,9 +34,40 @@
 	require_once __DIR__.'/Exception.php';
 	
 	/**
+	* This enumeration contains the different modes available to use a Cache.
+	*/
+	enum Thrush_Cache_Mode: int
+	{
+		/**
+		* If the requested data are already stored and are not outdated, it will be readback. Otherwise an external call will be made.
+		*/
+		case DefaultMode = 0;
+		
+		/**
+		* If the requested data are already stored no matter wether it is outdated, it will be readback. Otherwise an Exception will be thrown.
+		*/
+		case CacheOnlyMode = 1;
+		
+		/**
+		* Same as default mode but with a counter (semaphore) before switching to CacheOnlyMode.
+		*/
+		case DefaultWithLimitsMode = 2;
+		
+		/**
+		* Always issue external call and save in cache.
+		*/
+		case AlwaysRefreshMode = 3;
+		
+		/**
+		* Good practice to define the default value to guide users
+		*/
+		public const DEFAULT = self::DefaultMode;
+	}
+	
+	/**
 	* This class provides an abstraction to provide caching capabilities in order to store/retrieve data.
 	*
-	* Regarding external URL call, each type of cache can be configured with a defined mode (DefaultMode, CacheOnlyMode, DefaultWithLimitsMode, AlwaysRefreshMode).
+	* Regarding external URL call, each type of cache can be configured with a defined mode (see Thrush_Cache_Mode).
 	*/
 	abstract class Thrush_Cache
 	{
@@ -71,24 +102,24 @@
 		public const int LIFE_MONTH = 2635200;
 		
 		/**
-		* If the requested data are already stored and are not outdated, it will be readback. Otherwise an external call will be made.
+		* Deprecated, use Thrush_Cache_Mode instead
 		*/
-		public const int DefaultMode = 0;
+		public const Thrush_Cache_Mode DefaultMode = Thrush_Cache_Mode::DefaultMode;
 		
 		/**
-		* If the requested data are already stored no matter wether it is outdated, it will be readback. Otherwise an Exception will be thrown.
+		* Deprecated, use Thrush_Cache_Mode instead
 		*/
-		public const int CacheOnlyMode = 1;
+		public const Thrush_Cache_Mode CacheOnlyMode = Thrush_Cache_Mode::CacheOnlyMode;
 		
 		/**
-		* Same as default mode but with a counter (semaphore) before switching to CacheOnlyMode.
+		* Deprecated, use Thrush_Cache_Mode instead
 		*/
-		public const int DefaultWithLimitsMode = 2;
+		public const Thrush_Cache_Mode DefaultWithLimitsMode = Thrush_Cache_Mode::DefaultWithLimitsMode;
 		
 		/**
-		* Always issue external call and save in cache.
+		* Deprecated, use Thrush_Cache_Mode instead
 		*/
-		public const int AlwaysRefreshMode = 3;
+		public const Thrush_Cache_Mode AlwaysRefreshMode = Thrush_Cache_Mode::AlwaysRefreshMode;
 		
 		/**
 		* string Website name (used for user-agent HTTP attribute).
@@ -126,9 +157,9 @@
 		protected array $typeModes = array();
 		
 		/**
-		* int Default mode.
+		* Thrush_Cache_Mode Default mode.
 		*/
-		protected int $defaultMode = self::DefaultMode;
+		protected Thrush_Cache_Mode $defaultMode = Thrush_Cache_Mode::DefaultMode;
 		
 		/**
 		* int Default number of tokens when in DefaultWithLimitsMode.
@@ -219,7 +250,7 @@
 		*
 		* \deprecated This method will be removed in a following release, use the class WebPageLoader instead
 		*
-		* \param int $mode
+		* \param Thrush_Cache_Mode $mode
 		*   Mode to assign
 		* \param int $semaphore
 		*   Number of tokens when in DefaultWithLimitsMode (optional, -1 to use default value or keep existing value)
@@ -228,7 +259,7 @@
 		*
 		* \see getMode
 		*/
-		public function setMode(int $mode, int $semaphore=-1, string $type='')
+		public function setMode(Thrush_Cache_Mode $mode, int $semaphore=-1, string $type='')
 		{
 			if($type === '')
 			{
@@ -260,11 +291,11 @@
 		* \param string $type
 		*   Name of the cache to use
 		*
-		* \return int
+		* \return Thrush_Cache_Mode
 		*
 		* \see setMode
 		*/
-		protected function getMode(string $type): int
+		protected function getMode(string $type): Thrush_Cache_Mode
 		{
 			if(!array_key_exists($type, $this->typeModes))
 			{
@@ -309,7 +340,7 @@
 					'type' => $key,
 					'mode' => $values[0],
 					'tokensLeft' => max($values[1], 0),
-					'tokensMissing' => ($values[0]===self::DefaultWithLimitsMode?max(-$values[1], 0):'0'),
+					'tokensMissing' => ($values[0]===Thrush_Cache_Mode::DefaultWithLimitsMode?max(-$values[1], 0):'0'),
 					'calls' => $values[2],
 					'savings' => $values[5],
 					'loadings' => $values[6]
@@ -494,34 +525,34 @@
 				$loop = false;
 				switch($mode)
 				{
-					case self::AlwaysRefreshMode:
+					case Thrush_Cache_Mode::AlwaysRefreshMode:
 						$launchQuery = true;
 						break;
-					case self::DefaultWithLimitsMode:
+					case Thrush_Cache_Mode::DefaultWithLimitsMode:
 						if($this->exists($type, $key, $life))
 						{
-							$mode = self::CacheOnlyMode;
+							$mode = Thrush_Cache_Mode::CacheOnlyMode;
 						}
 						else
 						{
 							if($this->getSemaphore($type))
 							{
-								$mode = self::AlwaysRefreshMode;
+								$mode = Thrush_Cache_Mode::AlwaysRefreshMode;
 							}
 							else
 							{
-								$mode = self::CacheOnlyMode;
+								$mode = Thrush_Cache_Mode::CacheOnlyMode;
 							}
 						}
 						$loop = true;
 						break;
-					case self::CacheOnlyMode:
+					case Thrush_Cache_Mode::CacheOnlyMode:
 						if(!$this->exists($type, $key, self::LIFE_IMMORTAL))
 						{
 							throw new Thrush_Cache_NoDataToLoadException();
 						}
 						break;
-					case self::DefaultMode:
+					case Thrush_Cache_Mode::DefaultMode:
 					default:
 						if(!$this->exists($type, $key, $life))
 						{
