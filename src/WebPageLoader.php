@@ -146,7 +146,7 @@
 			// Setting up the cache
 			if(is_null($cache))
 			{
-				throw new Thrush_Exception('Error', 'A Cache is mandatory to query Nominatim server');
+				throw new Thrush_Exception('Error', 'A Cache is mandatory to query remote servers');
 			}
 			
 			$this->cache = $cache;
