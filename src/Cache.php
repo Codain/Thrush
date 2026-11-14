@@ -477,7 +477,7 @@
 		* \throws Thrush_Cache_NoDataToLoadException If data shall be retrieved from cache but are not available.
 		* \throws Thrush_HTTPException If HTTP code different from 200
 		*/
-		public function loadURLFromWebOrCache(string $type, string $url, array $postData=null, string $key=null, $life=self::LIFE_IMMORTAL, string $pwd='', array $callback=null, array $additionalHeaders=null): string
+		public function loadURLFromWebOrCache(string $type, string $url, array $postData=null, string $key=null, int $life=self::LIFE_IMMORTAL, string $pwd='', array $callback=null, array $additionalHeaders=null): string
 		{
 			if(is_null($key))
 			{
@@ -644,7 +644,7 @@
 		* \return bool
 		*   \c true if a 304 response code has been sent, \c false otherwise
 		*/
-		public function autoReplyIfNotModified(string $type, string $key, $life=self::LIFE_IMMORTAL): bool
+		public function autoReplyIfNotModified(string $type, string $key, int $life=self::LIFE_IMMORTAL): bool
 		{
 			// If data exists in cache and is not expired...
 			if($this->exists($type, $key, $life))
@@ -726,7 +726,7 @@
 		* \see load()
 		* \see save()
 		*/
-		abstract public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL): bool;
+		abstract public function exists(string $type, string $key, int $life=self::LIFE_IMMORTAL): bool;
 		
 		/**
 		* Move data in cache.
@@ -1135,7 +1135,7 @@
 		* \see load()
 		* \see save()
 		*/
-		public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL): bool
+		public function exists(string $type, string $key, int $life=self::LIFE_IMMORTAL): bool
 		{
 			$fullPath = $this->getFullPath($type, $key);
 			
@@ -1435,7 +1435,7 @@
 		* \see load()
 		* \see save()
 		*/
-		public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL): bool
+		public function exists(string $type, string $key, int $life=self::LIFE_IMMORTAL): bool
 		{
 			// If data exists in the cache
 			if(array_key_exists($type, $this->data) && array_key_exists($key, $this->data[$type]))
