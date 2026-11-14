@@ -74,52 +74,52 @@
 		/**
 		* Thrush_Cache Pointer to a Thrush_Cache object
 		*/
-		protected $cache = null;
+		protected ?Thrush_Cache $cache = null;
 		
 		/**
 		* string Name of the cache to use
 		*/
-		protected $type = '';
+		protected string $type = '';
 		
 		/**
 		* int Timeout when loading an URL for the connect phase (in ms, see CURLOPT_CONNECTTIMEOUT_MS)
 		*/
-		protected $urlConnectTimeout = 5000; // To do: setter
+		protected int $urlConnectTimeout = 5000; // To do: setter
 		
 		/**
 		* int Timeout when loading an URL for the whole operation (in ms, see CURLOPT_TIMEOUT_MS)
 		*/
-		protected $urlTimeout = 10000; // To do: setter
+		protected int $urlTimeout = 10000; // To do: setter
 		
 		/**
 		* DateTime Date of the last retrieved data.
 		*/
-		protected $lastDate = null;
+		protected ?DateTime $lastDate = null;
 		
 		/**
 		* string Key of the last data retrieved.
 		*/
-		protected $lastDateKey = null;
+		protected ?string $lastDateKey = null;
 		
 		/**
 		* int The budgetted number of calls allowed when in MODE_BUDGET mode.
 		*/
-		protected $budget = 10;
+		protected int $budget = 10;
 		
 		/**
 		* int The set mode for this instance.
 		*/
-		protected $mode = self::MODE_DEFAULT;
+		protected int $mode = self::MODE_DEFAULT;
 		
 		/**
 		* int A counter of calls for this instance.
 		*/
-		protected $callCounter = 0;
+		protected int $callCounter = 0;
 		
 		/**
 		* CurlHandle The baseline cUrl ressource used to make calls.
 		*/
-		protected $curl = null;
+		protected ?CurlHandle $curl = null;
 		
 		/**
 		* callable The callback to be called to determine dynamically the mode of this instance.
@@ -263,7 +263,7 @@
 		* \see setModeAlwaysRefresh
 		* \see setModeCallback
 		*/
-		public function getMode()
+		public function getMode(): int
 		{
 			return $this->mode;
 		}
@@ -273,7 +273,7 @@
 		*
 		* \return bool
 		*/
-		private function trySpendOneToken()
+		private function trySpendOneToken(): bool
 		{
 			$this->budget--;
 			
@@ -285,7 +285,7 @@
 		*
 		* \return array
 		*/
-		public function getStatistics()
+		public function getStatistics(): array
 		{
 			return array(
 				'type' => $this->type,
@@ -299,10 +299,10 @@
 		/**
 		* Get creation date of last data.
 		* 
-		* \return DateTime
+		* \return DateTime|null
 		*   PHP DateTime
 		*/
-		public function getLastDate()
+		public function getLastDate(): ?DateTime
 		{
 			if(is_null($this->lastDate) && !is_null($this->type) && !is_null($this->lastDateKey))
 			{
@@ -367,7 +367,7 @@
 		* \throws Thrush_Cache_NoDataToLoadException If data shall be retrieved from cache but are not available.
 		* \throws Thrush_HTTPException If HTTP code different from 200
 		*/
-		public function loadURL(string $url, ?array $postData, ?string $key, int $life=Thrush_Cache::LIFE_IMMORTAL, string $pwd='', array $callback=null, array $additionalHeaders=null)
+		public function loadURL(string $url, ?array $postData, ?string $key, int $life=Thrush_Cache::LIFE_IMMORTAL, string $pwd='', array $callback=null, array $additionalHeaders=null): string
 		{
 			// If no key is specified, we generate a hash using:
 			//   - The URL
@@ -538,7 +538,7 @@
 		*
 		* \see loadURL()
 		*/
-		public function loadURLAsHTMLDOMDocument(string $url, ?array $postData, ?string $key, int $life=Thrush_Cache::LIFE_IMMORTAL, string $pwd='', array $callback=null, array $additionalHeaders=null)
+		public function loadURLAsHTMLDOMDocument(string $url, ?array $postData, ?string $key, int $life=Thrush_Cache::LIFE_IMMORTAL, string $pwd='', array $callback=null, array $additionalHeaders=null): DOMDocument
 		{
 			// Because this class cannot decompress data, we force the header "Accept-Encoding" to "identity"
 			if(is_null($additionalHeaders))
@@ -568,7 +568,7 @@
 		*
 		* \see loadURL()
 		*/
-		public function loadURLAsXMLDOMDocument(string $url, ?array $postData, ?string $key, int $life=Thrush_Cache::LIFE_IMMORTAL, string $pwd='', array $callback=null, array $additionalHeaders=null)
+		public function loadURLAsXMLDOMDocument(string $url, ?array $postData, ?string $key, int $life=Thrush_Cache::LIFE_IMMORTAL, string $pwd='', array $callback=null, array $additionalHeaders=null): DOMDocument
 		{
 			// Because this class cannot decompress data, we force the header "Accept-Encoding" to "identity"
 			if(is_null($additionalHeaders))
@@ -598,7 +598,7 @@
 		*
 		* \see loadURL()
 		*/
-		public function loadURLAsJSONAssociative(string $url, ?array $postData, ?string $key, int $life=Thrush_Cache::LIFE_IMMORTAL, string $pwd='', array $callback=null, array $additionalHeaders=null)
+		public function loadURLAsJSONAssociative(string $url, ?array $postData, ?string $key, int $life=Thrush_Cache::LIFE_IMMORTAL, string $pwd='', array $callback=null, array $additionalHeaders=null): array|null
 		{
 			// Because this class cannot decompress data, we force the header "Accept-Encoding" to "identity"
 			if(is_null($additionalHeaders))
@@ -621,7 +621,7 @@
 		*
 		* \see loadURL()
 		*/
-		public function loadURLAsJSONObjects(string $url, ?array $postData, ?string $key, int $life=Thrush_Cache::LIFE_IMMORTAL, string $pwd='', array $callback=null, array $additionalHeaders=null)
+		public function loadURLAsJSONObjects(string $url, ?array $postData, ?string $key, int $life=Thrush_Cache::LIFE_IMMORTAL, string $pwd='', array $callback=null, array $additionalHeaders=null): array|null
 		{
 			// Because this class cannot decompress data, we force the header "Accept-Encoding" to "identity"
 			if(is_null($additionalHeaders))
