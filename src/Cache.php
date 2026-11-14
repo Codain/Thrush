@@ -36,25 +36,59 @@
 	/**
 	* This class provides an abstraction to provide caching capabilities in order to store/retrieve data.
 	*
-	* Regarding external URL call, each type of cache can be configured with a defined mode:
-	*  - DefaultMode: If the requested data are already stored and are not outdated, it will be readback. Otherwise an external call will be made.
-	*  - CacheOnlyMode: If the requested data are already stored no matter wether it is outdated, it will be readback. Otherwise an Exception will be thrown.
-	*  - DefaultWithLimitsMode: Same as default mode but with a counter (semaphore) before switching to CacheOnlyMode.
-	*  - AlwaysRefreshMode: Always issue external call and save in cache.
+	* Regarding external URL call, each type of cache can be configured with a defined mode (DefaultMode, CacheOnlyMode, DefaultWithLimitsMode, AlwaysRefreshMode).
 	*/
 	abstract class Thrush_Cache
 	{
-		const LIFE_IMMORTAL = -1;
-		const LIFE_HOUR = 3600;
-		const LIFE_DAY = 86400;
-		const LIFE_WEEK = 604800;
-		const LIFE_BIWEEK = 1296000;
-		const LIFE_MONTH = 2635200;
+		/**
+		* The ressource in the cache is considered to never expire
+		*/
+		public const int LIFE_IMMORTAL = -1;
 		
-		const DefaultMode = 0;
-		const CacheOnlyMode = 1;
-		const DefaultWithLimitsMode = 2;
-		const AlwaysRefreshMode = 3;
+		/**
+		* The ressource in the cache is considered to expire one hour after it was stored
+		*/
+		public const int LIFE_HOUR = 3600;
+		
+		/**
+		* The ressource in the cache is considered to expire one day after it was stored
+		*/
+		public const int LIFE_DAY = 86400;
+		
+		/**
+		* The ressource in the cache is considered to expire one week after it was stored
+		*/
+		public const int LIFE_WEEK = 604800;
+		
+		/**
+		* The ressource in the cache is considered to expire two weeks after it was stored
+		*/
+		public const int LIFE_BIWEEK = 1296000;
+		
+		/**
+		* The ressource in the cache is considered to expire one month after it was stored
+		*/
+		public const int LIFE_MONTH = 2635200;
+		
+		/**
+		* If the requested data are already stored and are not outdated, it will be readback. Otherwise an external call will be made.
+		*/
+		public const int DefaultMode = 0;
+		
+		/**
+		* If the requested data are already stored no matter wether it is outdated, it will be readback. Otherwise an Exception will be thrown.
+		*/
+		public const int CacheOnlyMode = 1;
+		
+		/**
+		* Same as default mode but with a counter (semaphore) before switching to CacheOnlyMode.
+		*/
+		public const int DefaultWithLimitsMode = 2;
+		
+		/**
+		* Always issue external call and save in cache.
+		*/
+		public const int AlwaysRefreshMode = 3;
 		
 		/**
 		* string Website name (used for user-agent HTTP attribute).
@@ -732,7 +766,7 @@
 		* \param string $pwd
 		*   Password to decrypt data, if required
 		* 
-		* \return mixed
+		* \return string
 		*   Data loaded
 		*
 		* \see exists()
