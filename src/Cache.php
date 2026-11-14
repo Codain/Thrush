@@ -264,7 +264,7 @@
 		*
 		* \see setMode
 		*/
-		protected function getMode(string $type)
+		protected function getMode(string $type): int
 		{
 			if(!array_key_exists($type, $this->typeModes))
 			{
@@ -282,7 +282,7 @@
 		*
 		* \return bool
 		*/
-		protected function getSemaphore(string $type)
+		protected function getSemaphore(string $type): bool
 		{
 			if(!array_key_exists($type, $this->typeModes))
 			{
@@ -299,7 +299,7 @@
 		*
 		* \return array
 		*/
-		public function getStatistics()
+		public function getStatistics(): array
 		{
 			$ret = array();
 			
@@ -334,7 +334,7 @@
 		* \see disable()
 		* \see isEnabled()
 		*/
-		public function enable(string $type)
+		public function enable(string $type): bool
 		{
 			if(!array_key_exists($type, $this->typeModes))
 			{
@@ -358,7 +358,7 @@
 		* \see enable()
 		* \see isEnabled()
 		*/
-		public function disable(string $type)
+		public function disable(string $type): bool
 		{
 			if(!array_key_exists($type, $this->typeModes))
 			{
@@ -383,7 +383,7 @@
 		* \see disable()
 		* \see setDefaultEnabled()
 		*/
-		public function isEnabled(string $type)
+		public function isEnabled(string $type): bool
 		{
 			if(!array_key_exists($type, $this->typeModes))
 			{
@@ -415,7 +415,7 @@
 		* \return int|null
 		*   Unix timestamp or null if the data is not found in the cache
 		*/
-		abstract public function getCreationTime(string $type, string $key);
+		abstract public function getCreationTime(string $type, string $key): ?int;
 		
 		/**
 		* Get creation date of last data.
@@ -423,7 +423,7 @@
 		* \return DateTime
 		*   PHP DateTime
 		*/
-		public function getLastDate()
+		public function getLastDate(): DateTime
 		{
 			if(is_null($this->lastDate) && !is_null($this->lastDateType) && !is_null($this->lastDateKey))
 			{
@@ -477,7 +477,7 @@
 		* \throws Thrush_Cache_NoDataToLoadException If data shall be retrieved from cache but are not available.
 		* \throws Thrush_HTTPException If HTTP code different from 200
 		*/
-		public function loadURLFromWebOrCache(string $type, string $url, array $postData=null, string $key=null, $life=self::LIFE_IMMORTAL, string $pwd='', array $callback=null, array $additionalHeaders=null)
+		public function loadURLFromWebOrCache(string $type, string $url, array $postData=null, string $key=null, $life=self::LIFE_IMMORTAL, string $pwd='', array $callback=null, array $additionalHeaders=null): string
 		{
 			if(is_null($key))
 			{
@@ -644,7 +644,7 @@
 		* \return bool
 		*   \c true if a 304 response code has been sent, \c false otherwise
 		*/
-		public function autoReplyIfNotModified(string $type, string $key, $life=self::LIFE_IMMORTAL)
+		public function autoReplyIfNotModified(string $type, string $key, $life=self::LIFE_IMMORTAL): bool
 		{
 			// If data exists in cache and is not expired...
 			if($this->exists($type, $key, $life))
@@ -687,7 +687,7 @@
 		* \return bool
 		*   \c true if a 304 response code has been sent, \c false otherwise
 		*/
-		static public function autoReplyIfNoneMatch(string $data)
+		static public function autoReplyIfNoneMatch(string $data): bool
 		{
 			if(http_response_code() !== 304)
 			{
@@ -715,7 +715,7 @@
 		*
 		* \see remove()
 		*/
-		abstract public function clear(string $type, string $glob='');
+		abstract public function clear(string $type, string $glob=''): int;
 		
 		/**
 		* Get if a data is stored in the cache and if it has not expired.
@@ -726,7 +726,7 @@
 		* \see load()
 		* \see save()
 		*/
-		abstract public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL);
+		abstract public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL): bool;
 		
 		/**
 		* Move data in cache.
@@ -737,7 +737,7 @@
 		*
 		* \see remove()
 		*/
-		abstract public function move(string $fromType, string $fromKey, string $toType, string $toKey);
+		abstract public function move(string $fromType, string $fromKey, string $toType, string $toKey): bool;
 		
 		/**
 		* Remove data from cache.
@@ -750,7 +750,7 @@
 		* \see load()
 		* \see exists()
 		*/
-		abstract public function remove(string $type, string $key);
+		abstract public function remove(string $type, string $key): bool;
 
 
 
@@ -777,7 +777,7 @@
 		* \throws Thrush_Exception If password provided is incorrect or if data are encrypted and no password is provided
 		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
 		*/
-		public function load(string $type, string $key, string $pwd='')
+		public function load(string $type, string $key, string $pwd=''): string
 		{
 			// Reset last date
 			$this->lastDate = null;
@@ -833,7 +833,7 @@
 		*
 		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
 		*/
-		abstract protected function loadInc(string $type, string $key);
+		abstract protected function loadInc(string $type, string $key): string;
 		
 		
 		
@@ -858,7 +858,7 @@
 		* \throws Thrush_Exception If password provided is incorrect or if data are encrypted and no password is provided
 		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
 		*/
-		public function loadMixed(string $type, string $key)
+		public function loadMixed(string $type, string $key): mixed
 		{
 			// Reset last date
 			$this->lastDate = null;
@@ -884,7 +884,7 @@
 		*
 		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
 		*/
-		abstract protected function loadMixedInc(string $type, string $key);
+		abstract protected function loadMixedInc(string $type, string $key): mixed;
 		
 		
 		
@@ -911,7 +911,7 @@
 		* \see saveInc()
 		* \see saveMixed()
 		*/
-		public function save(string $type, string $key, string &$data, string $pwd='')
+		public function save(string $type, string $key, string &$data, string $pwd=''): bool
 		{
 			$this->getMode($type);
 			$this->typeModes[$type][5]++;
@@ -938,7 +938,7 @@
 		*
 		* \see save()
 		*/
-		abstract protected function saveInc(string $type, string $key, string &$data);
+		abstract protected function saveInc(string $type, string $key, string &$data): bool;
 		
 		
 		
@@ -960,7 +960,7 @@
 		* \see save()
 		* \see saveMixedInc()
 		*/
-		public function saveMixed(string $type, string $key, &$data)
+		public function saveMixed(string $type, string $key, &$data): bool
 		{
 			$this->getMode($type);
 			$this->typeModes[$type][5]++;
@@ -976,7 +976,7 @@
 		*
 		* \see saveMixed()
 		*/
-		abstract protected function saveMixedInc(string $type, string $key, &$data);
+		abstract protected function saveMixedInc(string $type, string $key, &$data): bool;
 	}
 	
 	/**
@@ -1025,7 +1025,7 @@
 		*
 		* \see getFullPath()
 		*/
-		public function getRoot()
+		public function getRoot(): string
 		{
 			return $this->root;
 		}
@@ -1043,7 +1043,7 @@
 		*
 		* \see getRoot()
 		*/
-		public function getFullPath(string $type, string $key)
+		public function getFullPath(string $type, string $key): string
 		{
 			if($type === '')
 				return $this->root.$key;
@@ -1062,7 +1062,7 @@
 		* \return int|null
 		*   Unix timestamp or null if the data is not found in the cache
 		*/
-		public function getCreationTime(string $type, string $key)
+		public function getCreationTime(string $type, string $key): ?int
 		{
 			return filemtime($this->getFullPath($type, $key));
 		}
@@ -1083,7 +1083,7 @@
 		*
 		* \see remove()
 		*/
-		public function clear(string $type, string $glob='')
+		public function clear(string $type, string $glob=''): int
 		{
 			$nb = -1;
 			$dir = $this->root.$type.DIRECTORY_SEPARATOR;
@@ -1135,7 +1135,7 @@
 		* \see load()
 		* \see save()
 		*/
-		public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL)
+		public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL): bool
 		{
 			$fullPath = $this->getFullPath($type, $key);
 			
@@ -1174,7 +1174,7 @@
 		*
 		* \see remove()
 		*/
-		public function move(string $fromType, string $fromKey, string $toType, string $toKey)
+		public function move(string $fromType, string $fromKey, string $toType, string $toKey): bool
 		{
 			$oldname = $this->getFullPath($fromType, $fromKey);
 			$newname = $this->getFullPath($toType, $toKey);
@@ -1203,7 +1203,7 @@
 		* \see load()
 		* \see exists()
 		*/
-		public function remove(string $type, string $key)
+		public function remove(string $type, string $key): bool
 		{
 			$fullPath = $this->getFullPath($type, $key);
 			
@@ -1233,7 +1233,7 @@
 		*
 		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
 		*/
-		protected function loadInc(string $type, string $key)
+		protected function loadInc(string $type, string $key): string
 		{
 			$data = '';
 			$fullpath = $this->getFullPath($type, $key);
@@ -1268,7 +1268,7 @@
 		*
 		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
 		*/
-		protected function loadMixedInc(string $type, string $key)
+		protected function loadMixedInc(string $type, string $key): mixed
 		{
 			$data = '';
 			$fullpath = $this->getFullPath($type, $key);
@@ -1304,7 +1304,7 @@
 		*
 		* \see save()
 		*/
-		protected function saveInc(string $type, string $key, string &$data)
+		protected function saveInc(string $type, string $key, string &$data): bool
 		{
 			$fullPath = $this->getFullPath($type, $key);
 			
@@ -1326,7 +1326,7 @@
 		*
 		* \see save()
 		*/
-		protected function saveMixedInc(string $type, string $key, &$data)
+		protected function saveMixedInc(string $type, string $key, &$data): bool
 		{
 			$fullPath = $this->getFullPath($type, $key);
 			
@@ -1368,7 +1368,7 @@
 		* \return int|null
 		*   Unix timestamp or null if the data is not found in the cache
 		*/
-		public function getCreationTime(string $type, string $key)
+		public function getCreationTime(string $type, string $key): ?int
 		{
 			if(array_key_exists($type, $this->data) && array_key_exists($key, $this->data[$type]))
 				return $this->data[$type][$key]['t'];
@@ -1392,7 +1392,7 @@
 		*
 		* \see remove()
 		*/
-		public function clear(string $type, string $glob='')
+		public function clear(string $type, string $glob=''): int
 		{
 			$nb = -1;
 			
@@ -1435,7 +1435,7 @@
 		* \see load()
 		* \see save()
 		*/
-		public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL)
+		public function exists(string $type, string $key, $life=self::LIFE_IMMORTAL): bool
 		{
 			// If data exists in the cache
 			if(array_key_exists($type, $this->data) && array_key_exists($key, $this->data[$type]))
@@ -1472,7 +1472,7 @@
 		*
 		* \see remove()
 		*/
-		public function move(string $fromType, string $fromKey, string $toType, string $toKey)
+		public function move(string $fromType, string $fromKey, string $toType, string $toKey): bool
 		{
 			if(array_key_exists($fromType, $this->data) && array_key_exists($fromKey, $this->data[$fromType]))
 			{
@@ -1500,7 +1500,7 @@
 		* \see load()
 		* \see exists()
 		*/
-		public function remove(string $type, string $key)
+		public function remove(string $type, string $key): bool
 		{
 			if(array_key_exists($type, $this->data) && array_key_exists($key, $this->data[$type]))
 				unset($this->data[$type]);
@@ -1526,7 +1526,7 @@
 		*
 		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
 		*/
-		protected function loadInc(string $type, string $key)
+		protected function loadInc(string $type, string $key): string
 		{
 			return $this->loadMixedInc($type, $key);
 		}
@@ -1546,7 +1546,7 @@
 		*
 		* \throws Thrush_Cache_NoDataToLoadException If data requested not in cache
 		*/
-		protected function loadMixedInc(string $type, string $key)
+		protected function loadMixedInc(string $type, string $key): mixed
 		{
 			$data = '';
 			
@@ -1581,7 +1581,7 @@
 		*
 		* \see save()
 		*/
-		protected function saveInc(string $type, string $key, string &$data)
+		protected function saveInc(string $type, string $key, string &$data): bool
 		{
 			return $this->saveMixedInc($type, $key, $data);
 		}
@@ -1601,7 +1601,7 @@
 		*
 		* \see save()
 		*/
-		protected function saveMixedInc(string $type, string $key, &$data)
+		protected function saveMixedInc(string $type, string $key, &$data): bool
 		{
 			if(!array_key_exists($type, $this->data))
 				$this->data[$type] = array();
