@@ -64,14 +64,9 @@
 		*/
 		function __construct(Thrush_WebPageLoader $webPageLoader, string $email)
 		{
-			if(is_null($webPageLoader))
+			if(filter_var($email, FILTER_VALIDATE_EMAIL) === false)
 			{
-				throw new Thrush_Exception('Error', 'A WebPageLoader is mandatory to query Nominatim server');
-			}
-			
-			if(is_null($email) || filter_var($email, FILTER_VALIDATE_EMAIL) === false)
-			{
-				throw new Thrush_Exception('Error', 'An email is requested to query Nominatim server');
+				throw new Thrush_Exception('Error', 'The email provided is invalid. A valid email is requested to query Nominatim server');
 			}
 			
 			$this->webPageLoader = $webPageLoader;
