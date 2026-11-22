@@ -30,7 +30,7 @@
 	 * \license   https://opensource.org/licenses/MIT     MIT License
 	 */
 	 
-	require_once __DIR__.'/../Cache.php';
+	require_once __DIR__.'/../WebPageLoader.php';
 	require_once __DIR__.'/../Exception.php';
 	
 	/**
@@ -39,27 +39,27 @@
 	class Thrush_API_Wikipedia
 	{
 		/**
-		* Thrush_Cache Pointer to a Thrush_Cache object
+		* Thrush_WebPageLoader Pointer to a Thrush_WebPageLoader object
 		*/
-		protected $cache = null;
+		protected $webPageLoader = null;
 		
 		/**
 		* Constructor.
 		*
-		* \param Thrush_Cache $cache
-		*   Nominatim requires use of a Cache
+		* \param Thrush_WebPageLoader $webPageLoader
+		*   Object to call for the API
 		*
 		* \throws Thrush_Exception If no cache is provided
 		* \throws Thrush_Exception If the email is not valid
 		*/
-		function __construct(Thrush_Cache $cache)
+		function __construct(Thrush_WebPageLoader $webPageLoader)
 		{
-			if(is_null($cache))
+			if(is_null($webPageLoader))
 			{
-				throw new Thrush_Exception('Error', 'A Cache is mandatory to query Wikipedia server');
+				throw new Thrush_Exception('Error', 'A WebPageLoader is mandatory to query Wikipedia server');
 			}
 			
-			$this->cache = $cache;
+			$this->webPageLoader = $webPageLoader;
 		}
 		
 		/**
@@ -134,7 +134,7 @@
 			// Fetch data
 			try
 			{
-				$data = $this->cache->loadURLFromWebOrCache('wikipedia', $endpointUrl.'?'.$queryString, null, null, Thrush_Cache::LIFE_IMMORTAL);
+				$data = $this->webPageLoader->loadURL($endpointUrl.'?'.$queryString, null, null, Thrush_Cache::LIFE_IMMORTAL);
 				
 				return json_decode($data, true);
 			}
@@ -178,7 +178,7 @@
 			// Fetch data
 			try
 			{
-				$data = $this->cache->loadURLFromWebOrCache('wikipedia', $endpointUrl.'?'.$queryString, null, null, Thrush_Cache::LIFE_IMMORTAL);
+				$data = $this->webPageLoader->loadURL($endpointUrl.'?'.$queryString, null, null, Thrush_Cache::LIFE_IMMORTAL);
 				
 				return json_decode($data, true);
 			}
