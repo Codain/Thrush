@@ -171,9 +171,7 @@
 			try
 			{
 				// Fetch data
-				$data = $this->webPageLoader->loadURL($endpointUrl.'?'.$queryString, null, $key, Thrush_Cache::LIFE_IMMORTAL, '', array(array($this, 'addressArrayCallback'), $flags), null);
-				
-				return json_decode($data, true);
+				return $this->webPageLoader->loadURLAsJSONAssociative($endpointUrl.'?'.$queryString, null, $key, Thrush_Cache::LIFE_IMMORTAL, '', array(array($this, 'addressArrayCallback'), $flags), null);
 			}
 			catch(Thrush_Cache_NoDataToLoadException $e)
 			{
@@ -230,9 +228,7 @@
 			try
 			{
 				// Fetch data
-				$data = $this->webPageLoader->loadURL($endpointUrl.'?'.$queryString, null, $key, Thrush_Cache::LIFE_IMMORTAL, '', array(array($this, 'addressCallback'), $flags), null);
-			
-				return json_decode($data, true);
+				return $this->webPageLoader->loadURLAsJSONAssociative($endpointUrl.'?'.$queryString, null, $key, Thrush_Cache::LIFE_IMMORTAL, '', array(array($this, 'addressCallback'), $flags), null);
 			}
 			catch(Thrush_Cache_NoDataToLoadException $e)
 			{
