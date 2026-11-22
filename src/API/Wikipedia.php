@@ -41,7 +41,7 @@
 		/**
 		* Thrush_WebPageLoader Pointer to a Thrush_WebPageLoader object
 		*/
-		protected $webPageLoader = null;
+		protected Thrush_WebPageLoader $webPageLoader;
 		
 		/**
 		* Constructor.
@@ -76,7 +76,7 @@
 		* \return array
 		*   Array of properties
 		*/
-		static function parseArticleUrl(string $url)
+		static function parseArticleUrl(string $url): array
 		{
 			$data = parse_url($url);
 			$ret = array();
@@ -111,7 +111,7 @@
 		* \return array|null
 		*   JSON array of the result
 		*/
-		public function queryPageProps(string $title, string $language='en', array $overrideAttributes=array())
+		public function queryPageProps(string $title, string $language='en', array $overrideAttributes=array()): array|null
 		{
 			$endpointUrl = 'https://'.$language.'.wikipedia.org/w/api.php';
 			
@@ -155,7 +155,7 @@
 		* \return array|null
 		*   JSON array of the result
 		*/
-		public function queryExtracts(string $title, string $language='en', array $overrideAttributes=array())
+		public function queryExtracts(string $title, string $language='en', array $overrideAttributes=array()): array|null
 		{
 			$endpointUrl = 'https://'.$language.'.wikipedia.org/w/api.php';
 			
