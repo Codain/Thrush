@@ -36,7 +36,7 @@
 	/**
 	* Query a Nominatim server to get data
 	*/
-	class Thrush_Wikipedia
+	class Thrush_API_Wikipedia
 	{
 		/**
 		* Thrush_Cache Pointer to a Thrush_Cache object

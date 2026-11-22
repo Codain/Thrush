@@ -6,21 +6,21 @@
 	
 	use PHPUnit\Framework\TestCase;
 
-	final class Thrush_WikipediaTest extends TestCase
+	final class Thrush_API_WikipediaTest extends TestCase
 	{
 		public function testValidCache()
 		{
 			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
 			
 			$this->assertInstanceOf(
-				Thrush_Wikipedia::class,
-				new Thrush_Wikipedia($cache)
+				Thrush_API_Wikipedia::class,
+				new Thrush_API_Wikipedia($cache)
 			);
 		}
 		
 		public function testParseArticleUrl()
 		{
-			$results = Thrush_Wikipedia::parseArticleUrl('https://en.wikipedia.org/wiki/The_Beatles');
+			$results = Thrush_API_Wikipedia::parseArticleUrl('https://en.wikipedia.org/wiki/The_Beatles');
 			
 			$this->assertEquals(
 				'https',
