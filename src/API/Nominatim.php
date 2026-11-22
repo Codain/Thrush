@@ -245,6 +245,15 @@
 			}
 		}
 		
+		/**
+		* Deduce the Continent from a Nominatim result.
+		*
+		* \param array $place
+		*   Result from Nominatim
+		*
+		* \return string
+		*   The name of the Continent, in English
+		*/
 		protected function deduceContinent(array $place): string
 		{
 			static $isoCountries = array(
@@ -512,6 +521,14 @@
 			return $continent;
 		}
 		
+		/**
+		* Apply transformation to a Nominatim result
+		*
+		* \param string &$data
+		*   Result from Nominatim
+		* \param int $flags
+		*   Callback flags (optional, default 0).
+		*/
 		public function addressCallback(string &$data, int $flags=0)
 		{
 			if($flags !== 0)
@@ -528,6 +545,14 @@
 			}
 		}
 		
+		/**
+		* Apply transformation to several Nominatim results
+		*
+		* \param string &$data
+		*   Result from Nominatim
+		* \param int $flags
+		*   Callback flags (optional, default 0).
+		*/
 		public function addressArrayCallback(string &$data, int $flags=0)
 		{
 			if($flags !== 0)
