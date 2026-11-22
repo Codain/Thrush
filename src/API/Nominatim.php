@@ -85,7 +85,7 @@
 		*   use a standard RFC2616 accept-language string or a simple comma-
 		*   separated list of language codes.
 		* \param int $flags
-		*   Callback flags (optional, default 0).
+		*   Bitmask consisting of CALLBACK_DEDUCE_CONTINENT
 		*
 		* \return array|null
 		*   JSON array of the result (see https://nominatim.org/release-docs/develop/api/Lookup/) or null
@@ -136,7 +136,7 @@
 		*   use a standard RFC2616 accept-language string or a simple comma-
 		*   separated list of language codes.
 		* \param int $flags
-		*   Callback flags (optional, default 0).
+		*   Bitmask consisting of CALLBACK_DEDUCE_CONTINENT
 		*
 		* \return array|null
 		*   JSON array of the result (see https://nominatim.org/release-docs/develop/api/Lookup/) or null
@@ -194,7 +194,7 @@
 		*   use a standard RFC2616 accept-language string or a simple comma-
 		*   separated list of language codes.
 		* \param int $flags
-		*   Callback flags (optional, default 0).
+		*   Bitmask consisting of CALLBACK_DEDUCE_CONTINENT
 		*
 		* \return array|null
 		*   JSON array of the result (see https://nominatim.org/release-docs/develop/api/Reverse/) or null
@@ -522,7 +522,7 @@
 		* \param string &$data
 		*   Result from Nominatim
 		* \param int $flags
-		*   Callback flags (optional, default 0).
+		*   Bitmask consisting of CALLBACK_DEDUCE_CONTINENT
 		*/
 		public function addressCallback(string &$data, int $flags=0)
 		{
@@ -546,7 +546,7 @@
 		* \param string &$data
 		*   Result from Nominatim
 		* \param int $flags
-		*   Callback flags (optional, default 0).
+		*   Bitmask consisting of CALLBACK_DEDUCE_CONTINENT
 		*/
 		public function addressArrayCallback(string &$data, int $flags=0)
 		{
