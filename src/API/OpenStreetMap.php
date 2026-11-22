@@ -43,27 +43,27 @@
 		* Flag used when querying a Way or Relation to remove from the data everything not linked to the geometry
 		* (e.g. timestamp, version, changeset, user, uid...)
 		*/
-		const CALLBACK_KEEP_ONLY_GEOMETRY = 1;
+		const int CALLBACK_KEEP_ONLY_GEOMETRY = 1;
 		
 		/**
 		* Flag used when querying a Way or Relation to determine the center of the object
 		*/
-		const CALLBACK_COMPUTE_CENTER = 2;
+		const int CALLBACK_COMPUTE_CENTER = 2;
 		
 		/**
 		* Flag used when querying a Way or Relation to determine the bouding box of the object
 		*/
-		const CALLBACK_COMPUTE_BBOX = 4;
+		const int CALLBACK_COMPUTE_BBOX = 4;
 		
 		/**
 		* Thrush_WebPageLoader Pointer to a Thrush_WebPageLoader object
 		*/
-		protected $webPageLoader = null;
+		protected Thrush_WebPageLoader $webPageLoader;
 		
 		/**
 		*   array Array of ISO 639-1 preferred language codes
 		*/
-		protected $preferredLanguages = array();
+		protected array $preferredLanguages = array();
 		
 		/**
 		* Constructor.
@@ -101,7 +101,7 @@
 		* \return array
 		*   An array of ISO 639-1 preferred language codes
 		*/
-		public function getPreferredLanguages()
+		public function getPreferredLanguages(): array
 		{
 			return $this->preferredLanguages;
 		}
@@ -221,7 +221,7 @@
 		* \return Thrush_OpenStreetMap_Relation|null
 		*   A Thrush_OpenStreetMap_Node object or null
 		*/
-		public function queryNode(string $id)
+		public function queryNode(string $id): Thrush_OpenStreetMap_Relation|null
 		{
 			$endpointUrl = 'https://api.openstreetmap.org/api/0.6/';
 			
@@ -253,7 +253,7 @@
 		* \return Thrush_OpenStreetMap_Relation|null
 		*   A Thrush_OpenStreetMap_Way object or null
 		*/
-		public function queryWay(string $id, int $flags=0)
+		public function queryWay(string $id, int $flags=0): Thrush_OpenStreetMap_Relation|null
 		{
 			$endpointUrl = 'https://api.openstreetmap.org/api/0.6/';
 			
@@ -285,7 +285,7 @@
 		* \return Thrush_OpenStreetMap_Relation|null
 		*   A Thrush_OpenStreetMap_Relation object or null
 		*/
-		public function queryRelation(string $id, int $flags=0)
+		public function queryRelation(string $id, int $flags=0): Thrush_OpenStreetMap_Relation|null
 		{
 			$endpointUrl = 'https://api.openstreetmap.org/api/0.6/';
 			
