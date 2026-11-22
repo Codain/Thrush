@@ -54,11 +54,6 @@
 		*/
 		function __construct(Thrush_WebPageLoader $webPageLoader)
 		{
-			if(is_null($webPageLoader))
-			{
-				throw new Thrush_Exception('Error', 'A WebPageLoader is mandatory to query Wikipedia server');
-			}
-			
 			$this->webPageLoader = $webPageLoader;
 		}
 		
