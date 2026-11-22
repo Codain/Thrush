@@ -108,7 +108,7 @@
 		* \param array $overrideAttributes
 		*   List of attributes to customize the query, see https://en.wikipedia.org/w/api.php?action=help&modules=query%2Bpageprops
 		*
-		* \return array
+		* \return array|null
 		*   JSON array of the result
 		*/
 		public function queryPageProps(string $title, string $language='en', array $overrideAttributes=array())
@@ -134,9 +134,7 @@
 			// Fetch data
 			try
 			{
-				$data = $this->webPageLoader->loadURL($endpointUrl.'?'.$queryString, null, null, Thrush_Cache::LIFE_IMMORTAL);
-				
-				return json_decode($data, true);
+				return $this->webPageLoader->loadURLAsJSONAssociative($endpointUrl.'?'.$queryString, null, null, Thrush_Cache::LIFE_IMMORTAL);
 			}
 			catch(Thrush_Cache_NoDataToLoadException $e)
 			{
@@ -154,7 +152,7 @@
 		* \param array $overrideAttributes
 		*   List of attributes to customize the query, see https://en.wikipedia.org/w/api.php?action=help&modules=query%2Bextracts
 		*
-		* \return array
+		* \return array|null
 		*   JSON array of the result
 		*/
 		public function queryExtracts(string $title, string $language='en', array $overrideAttributes=array())
@@ -178,9 +176,7 @@
 			// Fetch data
 			try
 			{
-				$data = $this->webPageLoader->loadURL($endpointUrl.'?'.$queryString, null, null, Thrush_Cache::LIFE_IMMORTAL);
-				
-				return json_decode($data, true);
+				return $this->webPageLoader->loadURLAsJSONAssociative($endpointUrl.'?'.$queryString, null, null, Thrush_Cache::LIFE_IMMORTAL);
 			}
 			catch(Thrush_Cache_NoDataToLoadException $e)
 			{
