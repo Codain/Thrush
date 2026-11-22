@@ -77,11 +77,6 @@
 		*/
 		function __construct(Thrush_WebPageLoader $webPageLoader, array $preferredLanguages)
 		{
-			if(is_null($webPageLoader))
-			{
-				throw new Thrush_Exception('Error', 'A WebPageLoader is mandatory to query OSM server');
-			}
-			
 			$this->webPageLoader = $webPageLoader;
 			
 			// We define the preferred languages when querying for tags
