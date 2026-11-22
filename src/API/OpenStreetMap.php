@@ -69,7 +69,7 @@
 		* Constructor.
 		*
 		* \param Thrush_WebPageLoader $webPageLoader
-		*   Nominatim requires use of a WebPageLoader
+		*   Object to call for the API
 		* \param array $preferredLanguages
 		*   Array of ISO 639-1 language codes
 		*
@@ -109,7 +109,7 @@
 		* \param int $id
 		*   Identifier of the way
 		* \param int $flags
-		*   Set of Callback flags to apply to the results
+		*   Bitmask consisting of CALLBACK_KEEP_ONLY_GEOMETRY, CALLBACK_COMPUTE_CENTER, CALLBACK_COMPUTE_BBOX
 		*/
 		public function queryWayCallback(string &$data, string $id, int $flags=0)
 		{
@@ -162,7 +162,7 @@
 		* \param int $id
 		*   Identifier of the relation
 		* \param int $flags
-		*   Set of Callback flags to apply to the results
+		*   Bitmask consisting of CALLBACK_KEEP_ONLY_GEOMETRY, CALLBACK_COMPUTE_CENTER, CALLBACK_COMPUTE_BBOX
 		*/
 		public function queryRelationCallback(string &$data, string $id, int $flags=0)
 		{
@@ -243,7 +243,7 @@
 		* \param string $id
 		*   Identifier of the way
 		* \param int $flags
-		*   Set of Callback flags to apply to the results
+		*   Bitmask consisting of CALLBACK_KEEP_ONLY_GEOMETRY, CALLBACK_COMPUTE_CENTER, CALLBACK_COMPUTE_BBOX
 		*
 		* \return Thrush_OpenStreetMap_Relation|null
 		*   A Thrush_OpenStreetMap_Way object or null
@@ -275,7 +275,7 @@
 		* \param string $id
 		*   Identifier of the relation
 		* \param int $flags
-		*   Set of Callback flags to apply to the results
+		*   Bitmask consisting of CALLBACK_KEEP_ONLY_GEOMETRY, CALLBACK_COMPUTE_CENTER, CALLBACK_COMPUTE_BBOX
 		*
 		* \return Thrush_OpenStreetMap_Relation|null
 		*   A Thrush_OpenStreetMap_Relation object or null
