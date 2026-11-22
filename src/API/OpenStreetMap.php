@@ -33,7 +33,6 @@
 	require_once __DIR__.'/../Exception.php';
 	require_once __DIR__.'/../WebPageLoader.php';
 	require_once __DIR__.'/../Misc/OsmObjects.php';
-	require_once __DIR__.'/Nominatim.php';
 	
 	// To do:
 	// callback: Would be better to not decode, encode then decode
@@ -213,10 +212,10 @@
 		* \param string $id
 		*   Identifier of the node
 		*
-		* \return Thrush_OpenStreetMap_Relation|null
-		*   A Thrush_OpenStreetMap_Node object or null
+		* \return Thrush_API_OpenStreetMap_Node|null
+		*   A Thrush_API_OpenStreetMap_Node object or null
 		*/
-		public function queryNode(string $id): Thrush_OpenStreetMap_Relation|null
+		public function queryNode(string $id): ?Thrush_API_OpenStreetMap_Node
 		{
 			$endpointUrl = 'https://api.openstreetmap.org/api/0.6/';
 			
@@ -245,10 +244,10 @@
 		* \param int $flags
 		*   Bitmask consisting of CALLBACK_KEEP_ONLY_GEOMETRY, CALLBACK_COMPUTE_CENTER, CALLBACK_COMPUTE_BBOX
 		*
-		* \return Thrush_OpenStreetMap_Relation|null
-		*   A Thrush_OpenStreetMap_Way object or null
+		* \return Thrush_API_OpenStreetMap_Way|null
+		*   A Thrush_API_OpenStreetMap_Way object or null
 		*/
-		public function queryWay(string $id, int $flags=0): Thrush_OpenStreetMap_Relation|null
+		public function queryWay(string $id, int $flags=0): ?Thrush_API_OpenStreetMap_Way
 		{
 			$endpointUrl = 'https://api.openstreetmap.org/api/0.6/';
 			
@@ -277,10 +276,10 @@
 		* \param int $flags
 		*   Bitmask consisting of CALLBACK_KEEP_ONLY_GEOMETRY, CALLBACK_COMPUTE_CENTER, CALLBACK_COMPUTE_BBOX
 		*
-		* \return Thrush_OpenStreetMap_Relation|null
-		*   A Thrush_OpenStreetMap_Relation object or null
+		* \return Thrush_API_OpenStreetMap_Relation|null
+		*   A Thrush_API_OpenStreetMap_Relation object or null
 		*/
-		public function queryRelation(string $id, int $flags=0): Thrush_OpenStreetMap_Relation|null
+		public function queryRelation(string $id, int $flags=0): ?Thrush_API_OpenStreetMap_Relation
 		{
 			$endpointUrl = 'https://api.openstreetmap.org/api/0.6/';
 			
