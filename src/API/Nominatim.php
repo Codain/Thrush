@@ -39,17 +39,17 @@
 	*/
 	class Thrush_API_Nominatim
 	{
-		const CALLBACK_DEDUCE_CONTINENT = 1;
+		const int CALLBACK_DEDUCE_CONTINENT = 1;
 		
 		/**
 		* Thrush_WebPageLoader Pointer to a Thrush_WebPageLoader object
 		*/
-		protected $webPageLoader = null;
+		protected Thrush_WebPageLoader $webPageLoader;
 		
 		/**
 		* string Email address to reach website owner in case Nominatim needs to do it
 		*/
-		protected $email = '';
+		protected string $email = '';
 		
 		/**
 		* Constructor.
@@ -95,7 +95,7 @@
 		* \return array|null
 		*   JSON array of the result (see https://nominatim.org/release-docs/develop/api/Lookup/) or null
 		*/
-		public function queryByObject(Thrush_OpenStreetMap_Object $obj, array $acceptLanguages=null, int $flags=0)
+		public function queryByObject(Thrush_OpenStreetMap_Object $obj, array $acceptLanguages=null, int $flags=0): array|null
 		{
 			$res = null;
 			$forceByCoordinate = false;
@@ -146,7 +146,7 @@
 		* \return array|null
 		*   JSON array of the result (see https://nominatim.org/release-docs/develop/api/Lookup/) or null
 		*/
-		public function queryByObjectsId(array $keys, array $acceptLanguages=null, int $flags=0)
+		public function queryByObjectsId(array $keys, array $acceptLanguages=null, int $flags=0): array|null
 		{
 			$endpointUrl = 'https://nominatim.openstreetmap.org/lookup';
 			
@@ -204,7 +204,7 @@
 		* \return array|null
 		*   JSON array of the result (see https://nominatim.org/release-docs/develop/api/Reverse/) or null
 		*/
-		public function queryByCoordinate(float $lon, float $lat, array $acceptLanguages=null, int $flags=0)
+		public function queryByCoordinate(float $lon, float $lat, array $acceptLanguages=null, int $flags=0): array|null
 		{
 			$endpointUrl = 'https://nominatim.openstreetmap.org/reverse';
 			
@@ -245,7 +245,7 @@
 			}
 		}
 		
-		protected function deduceContinent(array $place)
+		protected function deduceContinent(array $place): string
 		{
 			static $isoCountries = array(
 				'ad' => 'Europe', // Andorra
