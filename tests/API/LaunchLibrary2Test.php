@@ -8,13 +8,14 @@
 
 	final class Thrush_API_LaunchLibrary2Test extends TestCase
 	{
-		public function testValidCache()
+		public function testCreateObject()
 		{
 			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
+			$webPageLoader = new Thrush_WebPageLoader($cache, 'launchlibrary2', 'localhost', 'localhost');
 			
 			$this->assertInstanceOf(
 				Thrush_API_LaunchLibrary2::class,
-				new Thrush_API_LaunchLibrary2($cache)
+				new Thrush_API_LaunchLibrary2($webPageLoader)
 			);
 		}
 	}

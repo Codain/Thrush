@@ -30,7 +30,7 @@
 	 * \license   https://opensource.org/licenses/MIT     MIT License
 	 */
 	 
-	require_once __DIR__.'/../Cache.php';
+	require_once __DIR__.'/../WebPageLoader.php';
 	require_once __DIR__.'/../Exception.php';
 	
 	/**
@@ -39,53 +39,46 @@
 	class Thrush_API_LaunchLibrary2
 	{
 		/**
-		* Thrush_Cache Pointer to a Thrush_Cache object
+		* Thrush_WebPageLoader Pointer to a Thrush_WebPageLoader object
 		*/
-		protected $cache = null;
+		protected Thrush_WebPageLoader $webPageLoader;
 		
 		/**
 		* string URL to TheSpaceDevs Launch Library 2 server
 		*/
-		protected $endpointUrl = 'https://ll.thespacedevs.com/2.0.0/';
+		protected string $endpointUrl = 'https://ll.thespacedevs.com/2.0.0/';
 		
 		/**
 		* Constructor.
 		*
-		* \param Thrush_Cache $cache
-		*   Nominatim requires use of a Cache
+		* \param Thrush_WebPageLoader $webPageLoader
+		*   Object to call for the API
 		*
 		* \throws Thrush_Exception If no cache is provided
 		* \throws Thrush_Exception If the email is not valid
 		*/
-		function __construct(Thrush_Cache $cache)
+		function __construct(Thrush_WebPageLoader $webPageLoader)
 		{
-			if(is_null($cache))
-			{
-				throw new Thrush_Exception('Error', 'A Cache is mandatory to query TheSpaceDevs Launch Library 2 server');
-			}
-			
-			$this->cache = $cache;
+			$this->webPageLoader = $webPageLoader;
 		}
 		
 		/**
 		* Query TheSpaceDevs launch library 2 server for a specific location.
 		*
-		* \param integer $id
+		* \param int $id
 		*   Location ID
 		*
 		* \return array|null
 		*   JSON array of the result or null
 		*/
-		public function queryLocation(integer $id)
+		public function queryLocation(int $id): ?array
 		{
 			$key = 'location-'.$id.'.json';
 			
 			try
 			{
 				// Fetch data
-				$data = $this->cache->loadURLFromWebOrCache('launchlibrary2', $this->endpointUrl.'location/'.$id.'/', null, $key, Thrush_Cache::LIFE_IMMORTAL, '', null);
-			
-				return json_decode($data, true);
+				return $this->webPageLoader->loadURLAsJSONAssociative($this->endpointUrl.'location/'.$id.'/', null, $key, Thrush_Cache::LIFE_IMMORTAL, '', null);
 			}
 			catch(Thrush_Cache_NoDataToLoadException $e)
 			{
@@ -99,10 +92,10 @@
 		* \param array $iteratorCallback
 		*   Array made of a callback and arguments to call for each pad
 		*
-		* \return integer
+		* \return int
 		*   Number of pads
 		*/
-		public function queryPads(array $iteratorCallback)
+		public function queryPads(array $iteratorCallback): int
 		{
 			return $this->queryItemsInc('pad/', 100, $iteratorCallback);
 		}
@@ -113,10 +106,10 @@
 		* \param array $iteratorCallback
 		*   Array made of a callback and arguments to call for each launch
 		*
-		* \return integer
+		* \return int
 		*   Number of upcoming launches
 		*/
-		public function queryUpcomingLaunches(array $iteratorCallback)
+		public function queryUpcomingLaunches(array $iteratorCallback): int
 		{
 			return $this->queryItemsInc('launch/upcoming/', 100, $iteratorCallback);
 		}
@@ -131,10 +124,10 @@
 		* \param array $iteratorCallback
 		*   Array made of a callback and arguments to call for each item
 		*
-		* \return integer
+		* \return int
 		*   Number of items
 		*/
-		protected function queryItemsInc(string $dir, int $limit, array $iteratorCallback)
+		protected function queryItemsInc(string $dir, int $limit, array $iteratorCallback): int
 		{
 			$nb = 0;
 			
@@ -147,9 +140,7 @@
 				$url = $this->endpointUrl.$dir.'?limit='.$limit;
 				while($url != null)
 				{
-					$data = $this->cache->loadURLFromWebOrCache('launchlibrary2', $url, null, str_replace('/', '-', $dir).'list_'.$i.'.json', Thrush_Cache::LIFE_IMMORTAL, '', null, array('accept: application/json'));
-					
-					$data = json_decode($data, true);
+					$data = $this->webPageLoader->loadURLAsJSONAssociative($url, null, str_replace('/', '-', $dir).'list_'.$i.'.json', Thrush_Cache::LIFE_IMMORTAL, '', null, array('accept: application/json'));
 					
 					foreach($data['results'] as $launch)
 					{
