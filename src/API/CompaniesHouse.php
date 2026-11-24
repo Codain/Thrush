@@ -81,13 +81,13 @@
 		/**
 		* Query Companies House server for a specific Company.
 		*
-		* \param $id
+		* \param string $id
 		*   Companies House number
 		*
 		* \return array|null
 		*   JSON array of the result or null
 		*/
-		public function queryCompanyById($id): ?Thrush_API_CompaniesHouse_Company
+		public function queryCompanyById(string $id): ?Thrush_API_CompaniesHouse_Company
 		{
 			$key = 'company-'.$id.'.json';
 			
