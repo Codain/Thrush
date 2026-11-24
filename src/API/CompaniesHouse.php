@@ -40,24 +40,19 @@
 	class Thrush_API_CompaniesHouse
 	{
 		/**
-		* Thrush_Cache Pointer to a Thrush_Cache object
+		* Thrush_WebPageLoader Pointer to a Thrush_WebPageLoader object
 		*/
-		protected $cache = null;
+		protected Thrush_WebPageLoader $webPageLoader;
 		
 		/**
 		* string URL to Companies House server
 		*/
-		protected $endpointUrl = 'https://api.company-information.service.gov.uk/';
+		protected string $endpointUrl = 'https://api.company-information.service.gov.uk/';
 		
 		/**
 		* Headers to send with a request
 		*/
-		protected $headers = null;
-		
-		/**
-		* Token to query the server
-		*/
-		protected $token = null;
+		protected array $headers;
 		
 		/**
 		* Constructor.
@@ -70,14 +65,9 @@
 		* \throws Thrush_Exception If no cache is provided
 		* \throws Thrush_Exception If the email is not valid
 		*/
-		function __construct(Thrush_Cache $cache, string $token)
+		function __construct(Thrush_WebPageLoader $webPageLoader, string $token)
 		{
-			if(is_null($cache))
-			{
-				throw new Thrush_Exception('Error', 'A Cache is mandatory to query Companies House server');
-			}
-			
-			$this->cache = $cache;
+			$this->webPageLoader = $webPageLoader;
 			
 			// Token provided by CompaniesHouse is username for a basic Authorization and no password is needed
 			$this->headers = array(
@@ -97,16 +87,14 @@
 		* \return array|null
 		*   JSON array of the result or null
 		*/
-		public function queryCompanyById($id)
+		public function queryCompanyById($id): ?Thrush_API_CompaniesHouse_Company
 		{
 			$key = 'company-'.$id.'.json';
 			
 			try
 			{
 				// Fetch data
-				$data = $this->cache->loadURLFromWebOrCache('companies-house', $this->endpointUrl.'company/'.$id, null, $key, Thrush_Cache::LIFE_IMMORTAL, '', null, $this->headers);
-				
-				$json = json_decode($data, true);
+				$json = $this->webPageLoader->loadURLAsJSONAssociative($this->endpointUrl.'company/'.$id, null, $key, Thrush_Cache::LIFE_IMMORTAL, '', null, $this->headers);
 				
 				return new Thrush_API_CompaniesHouse_Company($json);
 			}
@@ -120,14 +108,14 @@
 	// https://developer-specs.company-information.service.gov.uk/companies-house-public-data-api/resources/companyprofile?v=latest
 	class Thrush_API_CompaniesHouse_Company
 	{
-		var $data = null;
+		var array $data;
 		
 		function __construct(array $data)
 		{
 			$this->data = $data;
 		}
 		
-		function getDateOfCreation()
+		function getDateOfCreation(): DateTime
 		{
 			$date = DateTime::createFromFormat('Y-m-d H:i:s', $this->data['date_of_creation'].' 00:00:00');
 			
