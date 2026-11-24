@@ -114,19 +114,19 @@
 			$this->data = $data;
 		}
 		
-		function getInceptionDate()
+		function getInceptionDate(): DateTime
 		{
 			$date = DateTime::createFromFormat('Y-m-d', $this->data['dateCreationUniteLegale']);
 			
 			return $date;
 		}
 		
-		function getLegalCategory()
+		function getLegalCategory(): string
 		{
 			return $this->data['periodesUniteLegale'][0]['categorieJuridiqueUniteLegale'];
 		}
 		
-		function getNumberEmployees()
+		function getNumberEmployees(): string
 		{
 			$nb = $this->data['trancheEffectifsUniteLegale'];
 			
@@ -154,7 +154,7 @@
 			return $descriptionTranches[$nb];
 		}
 		
-		function getDateNumberEmployees()
+		function getDateNumberEmployees(): DateTime
 		{
 			$date = new DateTime();
 			$date->setDate($this->data['anneeEffectifsUniteLegale'], 12, 31);
