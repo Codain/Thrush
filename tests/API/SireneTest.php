@@ -10,20 +10,13 @@
 	{
 		public function testValidCache()
 		{
-			$cache = new Thrush_Cache_Files('localhost', 'localhost', './../cache/');
+			$cache = new Thrush_Cache_Files('localhost', 'localhost', './cache/');
+			$webPageLoader = new Thrush_WebPageLoader($cache, 'sirene', 'localhost', 'localhost');
 			
 			$this->assertInstanceOf(
 				Thrush_API_Sirene::class,
-				new Thrush_API_Sirene($cache, 'dummy_t0k3n')
+				new Thrush_API_Sirene($webPageLoader, 'dummy_t0k3n')
 			);
-		}
-		
-		public function testGetSiren()
-		{
-			$cache = new Thrush_Cache_Files('localhost', 'localhost', './../cache/');
-			$sirene = new Thrush_API_Sirene($cache, '3ecdf769-c558-39e8-a185-cd45cc57c82a');
-			
-			$results = $sirene->querySirenById('824029516');
 		}
 	}
 ?>

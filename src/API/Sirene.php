@@ -30,7 +30,7 @@
 	 * \license   https://opensource.org/licenses/MIT     MIT License
 	 */
 	 
-	require_once __DIR__.'/../Cache.php';
+	require_once __DIR__.'/../WebPageLoader.php';
 	require_once __DIR__.'/../Exception.php';
 	
 	/**
@@ -40,24 +40,19 @@
 	class Thrush_API_Sirene
 	{
 		/**
-		* Thrush_Cache Pointer to a Thrush_Cache object
+		* Thrush_WebPageLoader Pointer to a Thrush_WebPageLoader object
 		*/
-		protected $cache = null;
+		protected Thrush_WebPageLoader $webPageLoader;
 		
 		/**
 		* string URL to Sirene server
 		*/
-		protected $endpointUrl = 'https://api.insee.fr/entreprises/sirene/V3/';
+		protected string $endpointUrl = 'https://api.insee.fr/entreprises/sirene/V3/';
 		
 		/**
 		* Headers to send with a request
 		*/
-		protected $headers = null;
-		
-		/**
-		* Token to query the server
-		*/
-		protected $token = null;
+		protected array $headers;
 		
 		/**
 		* Constructor.
@@ -70,14 +65,9 @@
 		* \throws Thrush_Exception If no cache is provided
 		* \throws Thrush_Exception If the email is not valid
 		*/
-		function __construct(Thrush_Cache $cache, string $token)
+		function __construct(Thrush_WebPageLoader $webPageLoader, string $token)
 		{
-			if(is_null($cache))
-			{
-				throw new Thrush_Exception('Error', 'A Cache is mandatory to query Sirene server');
-			}
-			
-			$this->cache = $cache;
+			$this->webPageLoader = $webPageLoader;
 			
 			$this->headers = array(
 				'Authorization: Bearer '.$token,
@@ -88,22 +78,23 @@
 		/**
 		* Query Sirene server for a specific SIREN.
 		*
-		* \param $id
+		* \param string $id
 		*   SIREN ID
 		*
-		* \return array|null
-		*   JSON array of the result or null
+		* \return Thrush_API_Sirene_UniteLegale|null
+		*   Result or null
 		*/
-		public function querySirenById($id)
+		public function querySirenById( $id): ?Thrush_API_Sirene_UniteLegale
 		{
 			$key = 'siren-'.$id.'.json';
 			
 			try
 			{
 				// Fetch data
-				$data = $this->cache->loadURLFromWebOrCache('sirene', $this->endpointUrl.'siren/'.$id, null, $key, Thrush_Cache::LIFE_IMMORTAL, '', null, $this->headers);
-				
-				$json = json_decode($data, true);
+				$json = $this->webPageLoader->loadURLAsJSONAssociative($this->endpointUrl.'siren/'.$id, null, $key, Thrush_Cache::LIFE_IMMORTAL, '', null, $this->headers);
+			
+				if(is_null($json))
+					throw new Thrush_Exception('Error', 'SIREN data cannot be decoded for id='.$id);
 				
 				return new Thrush_API_Sirene_UniteLegale($json['uniteLegale']);
 			}
