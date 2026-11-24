@@ -30,7 +30,7 @@
 	 * \license   https://opensource.org/licenses/MIT     MIT License
 	 */
 	 
-	require_once __DIR__.'/../Cache.php';
+	require_once __DIR__.'/../WebPageLoader.php';
 	require_once __DIR__.'/../Exception.php';
 	
 	/**
